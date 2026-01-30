@@ -24,13 +24,13 @@ import {
 } from "./ui/dropdown-menu";
 
 const navItems = [
-  { path: "/", label: "Dashboard Overview", icon: LayoutDashboard, exact: true },
-  { path: "/upload", label: "Upload Blood Cell Image", icon: Upload },
-  { path: "/results", label: "Diagnosis Results", icon: Activity },
-  { path: "/metrics", label: "Model Performance Metrics", icon: BarChart3 },
-  { path: "/reports", label: "Patient Reports", icon: Users },
-  { path: "/audit", label: "Audit & Security Logs", icon: Shield },
-  { path: "/profile", label: "User Profile", icon: User },
+  { path: "/dashboard", label: "Dashboard Overview", icon: LayoutDashboard, exact: true },
+  { path: "/dashboard/upload", label: "Upload Blood Cell Image", icon: Upload },
+  { path: "/dashboard/results", label: "Diagnosis Results", icon: Activity },
+  { path: "/dashboard/metrics", label: "Model Performance Metrics", icon: BarChart3 },
+  { path: "/dashboard/reports", label: "Patient Reports", icon: Users },
+  { path: "/dashboard/audit", label: "Audit & Security Logs", icon: Shield },
+  { path: "/dashboard/profile", label: "User Profile", icon: User },
 ];
 
 export function DashboardLayout() {
@@ -160,7 +160,7 @@ export function DashboardLayout() {
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate("/profile")}>
+                  <DropdownMenuItem onClick={() => navigate("/dashboard/profile")}>
                     Profile Settings
                   </DropdownMenuItem>
                   <DropdownMenuItem>Change Role</DropdownMenuItem>

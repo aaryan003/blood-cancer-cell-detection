@@ -1,9 +1,27 @@
 {
+  "name": "blood-cancer-backend",
+  "version": "1.0.0",
+  "description": "Backend API for Blood Cancer Cell Detection System",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.2",
+    "express": "^4.18.2",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.0.1"
+  },
   "devDependencies": {
     "dotenv": "^17.2.3",
     "prisma": "^6.19.2"
-  },
-  "dependencies": {
-    "@prisma/client": "^6.19.2"
   }
 }

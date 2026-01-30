@@ -1,4 +1,7 @@
 import { createBrowserRouter } from "react-router";
+import { LandingPage } from "./components/LandingPage";
+import { SignupPage } from "./components/SignupPage";
+import { LoginPage } from "./components/LoginPage";
 import { DashboardLayout } from "./components/DashboardLayout";
 import { DashboardOverview } from "./components/DashboardOverview";
 import { UploadDiagnosis } from "./components/UploadDiagnosis";
@@ -11,6 +14,18 @@ import { UserProfile } from "./components/UserProfile";
 export const router = createBrowserRouter([
   {
     path: "/",
+    Component: LandingPage,
+  },
+  {
+    path: "/signup",
+    Component: SignupPage,
+  },
+  {
+    path: "/login",
+    Component: LoginPage,
+  },
+  {
+    path: "/dashboard",
     Component: DashboardLayout,
     children: [
       { index: true, Component: DashboardOverview },
