@@ -14,7 +14,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **ML-03**: Prediction returns cell type breakdown (WBC, RBC, Platelets counts/percentages)
 - [x] **ML-04**: Prediction generates Grad-CAM heatmap visualization on uploaded image
 - [x] **ML-05**: User can select which model to use (base BCCD or EfficientNet)
-- [ ] **ML-06**: Side-by-side model comparison when user selects both models
+- [x] **ML-06**: Side-by-side model comparison when user selects both models
 
 ### Dashboard
 
@@ -102,7 +102,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ML-05 | Phase 2 | Complete |
 | ML-03 | Phase 3 | Complete |
 | ML-04 | Phase 3 | Complete |
-| ML-06 | Phase 3 | Pending |
+| ML-06 | Phase 3 | Complete |
 | API-01 | Phase 4 | Pending |
 | API-02 | Phase 4 | Pending |
 | API-03 | Phase 4 | Pending |

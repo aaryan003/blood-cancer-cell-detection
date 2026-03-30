@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-03-30T18:31:36.635Z"
+stopped_at: Completed 03-02-PLAN.md
+last_updated: "2026-03-30T18:36:32.142Z"
 last_activity: 2026-03-30 — POST /predict endpoint and inference pipeline implemented
 progress:
   total_phases: 8
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 6
-  completed_plans: 5
+  completed_plans: 6
   percent: 31
 ---
 
@@ -55,6 +55,7 @@ Progress: [██░░░░░░░░] 31%
 | Phase 02-ml-microservice-core-inference P01 | 8 | 2 tasks | 7 files |
 | Phase 02-ml-microservice-core-inference P02 | 7 min | 2 tasks | 2 files |
 | Phase 03-ml-microservice-advanced-features P01 | 3 | 2 tasks | 3 files |
+| Phase 03-ml-microservice-advanced-features P02 | 3 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -81,6 +82,8 @@ Recent decisions affecting current work:
 - [Phase 02-ml-microservice-core-inference P02]: CORS allow_origins=["*"] at FastAPI layer; production restriction deferred to Docker/nginx
 - [Phase 03-ml-microservice-advanced-features]: PIL used for image resize/blend instead of cv2 to avoid opencv dependency in Grad-CAM
 - [Phase 03-ml-microservice-advanced-features]: CELL_TYPE_CATEGORIES uses frozenset values consistent with existing _CANCEROUS_CLASSES pattern
+- [Phase 03-ml-microservice-advanced-features]: Grad-CAM errors are non-fatal: wrapped in try/except so heatmap failure returns None without crashing prediction
+- [Phase 03-ml-microservice-advanced-features]: model=both reads image bytes once then passes to both models in comparison mode to avoid double upload overhead
 
 ### Pending Todos
 
@@ -93,6 +96,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T18:31:36.629Z
-Stopped at: Completed 03-01-PLAN.md
+Last session: 2026-03-30T18:36:32.137Z
+Stopped at: Completed 03-02-PLAN.md
 Resume file: None
