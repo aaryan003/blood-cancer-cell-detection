@@ -4,6 +4,7 @@ torch
 torchvision
 Pillow
 python-multipart
+matplotlib
 
 # Only needed for weight export (generating .pth files from Kaggle dataset)
 # kagglehub
