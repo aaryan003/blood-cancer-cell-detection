@@ -5,6 +5,10 @@ import rateLimit from 'express-rate-limit';
 import authRoutes from './modules/auth/auth.routes.js';
 import uploadRoutes from './modules/upload/upload.routes.js';
 import dashboardRoutes from './modules/dashboard/dashboard.routes.js';
+import diagnosesRoutes from './modules/diagnoses/diagnoses.routes.js';
+import reportsRoutes from './modules/reports/reports.routes.js';
+import metricsRoutes from './modules/metrics/metrics.routes.js';
+import auditLogsRoutes from './modules/audit-logs/auditLogs.routes.js';
 import { generateCaptcha } from './captcha.js';
 
 const app = express();
@@ -42,6 +46,10 @@ app.get('/api/captcha', generateCaptcha);
 app.use('/api/auth', authRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/diagnoses', diagnosesRoutes);
+app.use('/api/reports', reportsRoutes);
+app.use('/api/metrics', metricsRoutes);
+app.use('/api/audit-logs', auditLogsRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
