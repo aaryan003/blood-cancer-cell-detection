@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-03-30T12:19:02.500Z"
-last_activity: 2026-03-30 — Seed script created, all 8 tables populated with demo data
+last_updated: "2026-03-30T12:24:32.487Z"
+last_activity: 2026-03-30 — POST /predict endpoint and inference pipeline implemented
 progress:
   total_phases: 8
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
-  completed_plans: 3
-  percent: 25
+  completed_plans: 4
+  percent: 31
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 ## Current Position
 
-Phase: 1 of 8 (Schema & Data Foundation)
+Phase: 2 of 8 (ML Microservice Core Inference)
 Plan: 2 of 2 in current phase (COMPLETE)
-Status: In progress — Phase 01 complete, ready for Phase 02
-Last activity: 2026-03-30 — Seed script created, all 8 tables populated with demo data
+Status: In progress — Phase 02 complete, ready for Phase 03
+Last activity: 2026-03-30 — POST /predict endpoint and inference pipeline implemented
 
-Progress: [██░░░░░░░░] 25%
+Progress: [██░░░░░░░░] 31%
 
 ## Performance Metrics
 
@@ -53,6 +53,7 @@ Progress: [██░░░░░░░░] 25%
 | Phase 01-schema-data-foundation P01 | 3 min | 2 tasks | 1 files |
 | Phase 01-schema-data-foundation P02 | 2 min | 2 tasks | 2 files |
 | Phase 02-ml-microservice-core-inference P01 | 8 | 2 tasks | 7 files |
+| Phase 02-ml-microservice-core-inference P02 | 7 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,9 @@ Recent decisions affecting current work:
 - [Phase 02-ml-microservice-core-inference]: FastAPI lifespan context manager used over deprecated @app.on_event for model loading at startup
 - [Phase 02-ml-microservice-core-inference]: Models load gracefully at startup — missing weights log warning but do not crash; /health returns 503 degraded status if no models available
 - [Phase 02-ml-microservice-core-inference]: torch.load uses weights_only=False because checkpoint dict contains non-tensor keys (classes list)
+- [Phase 02-ml-microservice-core-inference P02]: Cancer risk mapping uses erythroblast+ig as cancerous indicators (demo/academic only, not clinically validated)
+- [Phase 02-ml-microservice-core-inference P02]: Cancer confidence = sum of cancerous class probs when Cancerous, 1 minus that sum when Non-cancerous
+- [Phase 02-ml-microservice-core-inference P02]: CORS allow_origins=["*"] at FastAPI layer; production restriction deferred to Docker/nginx
 
 ### Pending Todos
 
