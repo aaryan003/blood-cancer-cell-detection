@@ -6,7 +6,8 @@ Startup: Loads both ML models (bccd/ResNet50 and efficientnet/EfficientNet-B0) i
          as None and the health check reports it as unavailable.
 
 Endpoints:
-    GET /health — Returns model load status. 200 if at least one model loaded, 503 if none.
+    GET  /health  — Returns model load status. 200 if at least one model loaded, 503 if none.
+    POST /predict — Accepts multipart image upload + model query param, returns inference result.
 """
 
 import logging
@@ -14,9 +15,11 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Query, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.inference import predict
 from app.models import load_model
 
 logging.basicConfig(
@@ -80,6 +83,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# CORS middleware — allow all origins for development; restrict via Docker config in production
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # ---------------------------------------------------------------------------
 # Endpoints
@@ -107,6 +118,91 @@ async def health_check() -> JSONResponse:
             "models": model_status,
         },
     )
+
+
+@app.post("/predict", tags=["Inference"])
+async def predict_endpoint(
+    file: UploadFile,
+    model: str = Query(default="bccd", description="Model to use: 'bccd' or 'efficientnet'"),
+) -> JSONResponse:
+    """
+    Classify a blood cell image and return a cancer risk assessment.
+
+    - **file**: Multipart image upload (JPEG, PNG, etc.)
+    - **model**: Query parameter selecting the model — "bccd" (ResNet50) or "efficientnet" (EfficientNet-B0)
+
+    Returns JSON with:
+        prediction, confidence, model, cell_breakdown (8 classes), processing_time_ms
+    """
+    # Validate model parameter
+    if model not in MODEL_NAMES:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "error": "Invalid model",
+                "detail": "Model must be 'bccd' or 'efficientnet'",
+            },
+        )
+
+    # Check model availability
+    models_state = getattr(app.state, "models", {})
+    model_instance = models_state.get(model)
+    if model_instance is None:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "error": "Model not available",
+                "detail": (
+                    f"Model '{model}' failed to load. "
+                    "Run export_weights.py first."
+                ),
+            },
+        )
+
+    # Read uploaded image bytes
+    try:
+        image_bytes = await file.read()
+    except Exception as exc:  # noqa: BLE001
+        return JSONResponse(
+            status_code=422,
+            content={
+                "error": "Invalid image",
+                "detail": str(exc),
+            },
+        )
+
+    # Run inference
+    try:
+        result = predict(model_instance, image_bytes)
+    except (OSError, SyntaxError, ValueError) as exc:
+        # PIL/image format errors
+        return JSONResponse(
+            status_code=422,
+            content={
+                "error": "Invalid image",
+                "detail": str(exc),
+            },
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Prediction failed for model '%s': %s", model, exc, exc_info=True)
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": "Prediction failed",
+                "detail": str(exc),
+            },
+        )
+
+    # Assemble response — add model name to the inference result
+    response = {
+        "prediction": result["prediction"],
+        "confidence": result["confidence"],
+        "model": model,
+        "cell_breakdown": result["cell_breakdown"],
+        "processing_time_ms": result["processing_time_ms"],
+    }
+
+    return JSONResponse(status_code=200, content=response)
 
 
 # ---------------------------------------------------------------------------
