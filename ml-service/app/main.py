@@ -8,6 +8,7 @@ Startup: Loads both ML models (bccd/ResNet50 and efficientnet/EfficientNet-B0) i
 Endpoints:
     GET  /health  — Returns model load status. 200 if at least one model loaded, 503 if none.
     POST /predict — Accepts multipart image upload + model query param, returns inference result.
+                    Supports model=both for side-by-side dual-model comparison.
 """
 
 import logging
@@ -123,26 +124,126 @@ async def health_check() -> JSONResponse:
 @app.post("/predict", tags=["Inference"])
 async def predict_endpoint(
     file: UploadFile,
-    model: str = Query(default="bccd", description="Model to use: 'bccd' or 'efficientnet'"),
+    model: str = Query(default="bccd", description="Model: 'bccd', 'efficientnet', or 'both'"),
 ) -> JSONResponse:
     """
     Classify a blood cell image and return a cancer risk assessment.
 
     - **file**: Multipart image upload (JPEG, PNG, etc.)
-    - **model**: Query parameter selecting the model — "bccd" (ResNet50) or "efficientnet" (EfficientNet-B0)
+    - **model**: Query parameter selecting the model — "bccd" (ResNet50), "efficientnet"
+                 (EfficientNet-B0), or "both" for side-by-side dual-model comparison.
 
-    Returns JSON with:
-        prediction, confidence, model, cell_breakdown (8 classes), processing_time_ms
+    Single-model response fields:
+        prediction, confidence, model, cell_breakdown (8 classes),
+        cell_type_summary (WBC/RBC/Platelets), gradcam_heatmap (base64 or null),
+        processing_time_ms
+
+    Dual-model response (model=both):
+        comparison, results (bccd and efficientnet objects), total_processing_time_ms
     """
     # Validate model parameter
-    if model not in MODEL_NAMES:
+    valid_models = MODEL_NAMES + ["both"]
+    if model not in valid_models:
         return JSONResponse(
             status_code=400,
             content={
                 "error": "Invalid model",
-                "detail": "Model must be 'bccd' or 'efficientnet'",
+                "detail": "Model must be 'bccd', 'efficientnet', or 'both'",
             },
         )
+
+    # Read uploaded image bytes (done once regardless of single/dual mode)
+    try:
+        image_bytes = await file.read()
+    except Exception as exc:  # noqa: BLE001
+        return JSONResponse(
+            status_code=422,
+            content={
+                "error": "Invalid image",
+                "detail": str(exc),
+            },
+        )
+
+    # -----------------------------------------------------------------------
+    # Dual-model comparison path (model=both)
+    # -----------------------------------------------------------------------
+    if model == "both":
+        models_state = getattr(app.state, "models", {})
+        unavailable = [
+            name for name in MODEL_NAMES
+            if models_state.get(name) is None
+        ]
+        if unavailable:
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "error": "Model not available",
+                    "detail": (
+                        f"The following models are not loaded: {unavailable}. "
+                        "Run export_weights.py first."
+                    ),
+                },
+            )
+
+        try:
+            bccd_result = predict(models_state["bccd"], image_bytes, model_type="bccd")
+            efficientnet_result = predict(
+                models_state["efficientnet"], image_bytes, model_type="efficientnet"
+            )
+        except (OSError, SyntaxError, ValueError) as exc:
+            return JSONResponse(
+                status_code=422,
+                content={
+                    "error": "Invalid image",
+                    "detail": str(exc),
+                },
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.error("Comparison prediction failed: %s", exc, exc_info=True)
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "error": "Prediction failed",
+                    "detail": str(exc),
+                },
+            )
+
+        total_time = round(
+            bccd_result["processing_time_ms"] + efficientnet_result["processing_time_ms"],
+            2,
+        )
+
+        return JSONResponse(
+            status_code=200,
+            content={
+                "comparison": True,
+                "results": {
+                    "bccd": {
+                        "prediction": bccd_result["prediction"],
+                        "confidence": bccd_result["confidence"],
+                        "model": "bccd",
+                        "cell_breakdown": bccd_result["cell_breakdown"],
+                        "cell_type_summary": bccd_result["cell_type_summary"],
+                        "gradcam_heatmap": bccd_result["gradcam_heatmap"],
+                        "processing_time_ms": bccd_result["processing_time_ms"],
+                    },
+                    "efficientnet": {
+                        "prediction": efficientnet_result["prediction"],
+                        "confidence": efficientnet_result["confidence"],
+                        "model": "efficientnet",
+                        "cell_breakdown": efficientnet_result["cell_breakdown"],
+                        "cell_type_summary": efficientnet_result["cell_type_summary"],
+                        "gradcam_heatmap": efficientnet_result["gradcam_heatmap"],
+                        "processing_time_ms": efficientnet_result["processing_time_ms"],
+                    },
+                },
+                "total_processing_time_ms": total_time,
+            },
+        )
+
+    # -----------------------------------------------------------------------
+    # Single-model path
+    # -----------------------------------------------------------------------
 
     # Check model availability
     models_state = getattr(app.state, "models", {})
@@ -159,21 +260,9 @@ async def predict_endpoint(
             },
         )
 
-    # Read uploaded image bytes
-    try:
-        image_bytes = await file.read()
-    except Exception as exc:  # noqa: BLE001
-        return JSONResponse(
-            status_code=422,
-            content={
-                "error": "Invalid image",
-                "detail": str(exc),
-            },
-        )
-
     # Run inference
     try:
-        result = predict(model_instance, image_bytes)
+        result = predict(model_instance, image_bytes, model_type=model)
     except (OSError, SyntaxError, ValueError) as exc:
         # PIL/image format errors
         return JSONResponse(
@@ -193,12 +282,14 @@ async def predict_endpoint(
             },
         )
 
-    # Assemble response — add model name to the inference result
+    # Assemble response — add model name and new fields from updated predict()
     response = {
         "prediction": result["prediction"],
         "confidence": result["confidence"],
         "model": model,
         "cell_breakdown": result["cell_breakdown"],
+        "cell_type_summary": result["cell_type_summary"],
+        "gradcam_heatmap": result["gradcam_heatmap"],
         "processing_time_ms": result["processing_time_ms"],
     }
 
