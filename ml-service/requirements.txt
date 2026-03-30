@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+torch
+torchvision
+Pillow
+python-multipart
+
+# Only needed for weight export (generating .pth files from Kaggle dataset)
+# kagglehub
