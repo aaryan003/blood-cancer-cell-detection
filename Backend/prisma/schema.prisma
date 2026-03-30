@@ -91,11 +91,14 @@ model Upload {
 }
 
 model Diagnosis {
-  id          String   @id @default(uuid())
-  result      String
-  confidence  Float
-  metadata    Json
-  createdAt   DateTime @default(now())
+  id            String   @id @default(uuid())
+  result        String
+  confidence    Float
+  metadata      Json
+  modelName     String?
+  cellBreakdown Json?
+  heatmapUrl    String?
+  createdAt     DateTime @default(now())
 
   report      Report @relation(fields: [reportId], references: [id])
   reportId    String   @unique
