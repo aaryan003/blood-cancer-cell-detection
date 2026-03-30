@@ -4,12 +4,16 @@
   "description": "Backend API for Blood Cancer Cell Detection System",
   "type": "module",
   "main": "src/server.js",
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev"
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "node prisma/seed.js"
   },
   "dependencies": {
     "@prisma/client": "^6.19.2",
