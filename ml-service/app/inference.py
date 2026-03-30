@@ -31,6 +31,47 @@ from app.config import CLASS_NAMES, IMG_SIZE, IMAGENET_MEAN, IMAGENET_STD
 # ---------------------------------------------------------------------------
 _CANCEROUS_CLASSES = frozenset({"erythroblast", "ig"})
 
+# ---------------------------------------------------------------------------
+# Clinical cell type category mapping (8 classes -> 3 categories)
+# WBC: White Blood Cells (6 classes — all leukocyte types)
+# RBC: Red Blood Cells (erythroblast — nucleated RBC precursor)
+# Platelets: thrombocytes
+# ---------------------------------------------------------------------------
+CELL_TYPE_CATEGORIES: dict = {
+    "WBC": frozenset({"basophil", "eosinophil", "ig", "lymphocyte", "monocyte", "neutrophil"}),
+    "RBC": frozenset({"erythroblast"}),
+    "Platelets": frozenset({"platelet"}),
+}
+
+
+# ---------------------------------------------------------------------------
+# Cell type aggregation
+# ---------------------------------------------------------------------------
+
+def aggregate_cell_types(cell_breakdown: dict) -> dict:
+    """
+    Group 8 individual blood cell class probabilities into 3 clinical categories.
+
+    Categories:
+        WBC (White Blood Cells): basophil, eosinophil, ig, lymphocyte, monocyte, neutrophil
+        RBC (Red Blood Cells):   erythroblast
+        Platelets:               platelet
+
+    Args:
+        cell_breakdown: Dict mapping each of the 8 class names to its probability.
+
+    Returns:
+        Dict with keys "WBC", "RBC", "Platelets" and their summed probabilities,
+        each rounded to 4 decimal places. Values sum to approximately 1.0.
+    """
+    return {
+        category: round(
+            sum(cell_breakdown.get(cls, 0.0) for cls in classes),
+            4,
+        )
+        for category, classes in CELL_TYPE_CATEGORIES.items()
+    }
+
 
 # ---------------------------------------------------------------------------
 # Preprocessing
@@ -163,6 +204,7 @@ def predict(model: nn.Module, image_bytes: bytes) -> dict:
             prediction (str)           — "Cancerous" or "Non-cancerous"
             confidence (float)         — risk label confidence
             cell_breakdown (dict)      — per-class probabilities for all 8 classes
+            cell_type_summary (dict)   — aggregated WBC/RBC/Platelets category percentages
             processing_time_ms (float) — wall-clock time in milliseconds
     """
     t_start = time.perf_counter()
@@ -179,6 +221,9 @@ def predict(model: nn.Module, image_bytes: bytes) -> dict:
         inference_result["cell_breakdown"],
     )
 
+    # Step 4: Aggregate cell types into clinical categories
+    cell_type_summary = aggregate_cell_types(inference_result["cell_breakdown"])
+
     t_end = time.perf_counter()
     processing_time_ms = round((t_end - t_start) * 1000, 2)
 
@@ -186,5 +231,6 @@ def predict(model: nn.Module, image_bytes: bytes) -> dict:
         "prediction": risk_result["prediction"],
         "confidence": risk_result["confidence"],
         "cell_breakdown": inference_result["cell_breakdown"],
+        "cell_type_summary": cell_type_summary,
         "processing_time_ms": processing_time_ms,
     }
