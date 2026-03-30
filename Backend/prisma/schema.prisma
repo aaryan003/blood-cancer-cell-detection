@@ -113,3 +113,15 @@ model AuditLog {
   user      User   @relation(fields: [userId], references: [id])
   userId    String
 }
+
+model ModelMetrics {
+  id               String   @id @default(uuid())
+  modelName        String
+  accuracy         Float
+  precision        Float
+  recall           Float
+  f1Score          Float
+  totalPredictions Int
+  evaluatedAt      DateTime @default(now())
+  createdAt        DateTime @default(now())
+}
