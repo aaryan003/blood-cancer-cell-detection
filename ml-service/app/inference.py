@@ -12,6 +12,7 @@ only. It is NOT clinically validated and must not be used for medical decisions.
 """
 
 import io
+import logging
 import time
 from typing import Dict
 
@@ -22,6 +23,9 @@ from PIL import Image
 from torchvision import transforms
 
 from app.config import CLASS_NAMES, IMG_SIZE, IMAGENET_MEAN, IMAGENET_STD
+from app.gradcam import generate_gradcam
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Cell types associated with cancer risk indicators
@@ -136,6 +140,7 @@ def run_inference(model: nn.Module, image_tensor: torch.Tensor) -> dict:
 
     return {
         "predicted_class": predicted_class,
+        "predicted_idx": predicted_idx,
         "confidence": confidence,
         "cell_breakdown": cell_breakdown,
     }
@@ -189,15 +194,17 @@ def map_cancer_risk(predicted_class: str, cell_breakdown: dict) -> dict:
 # High-level predict function
 # ---------------------------------------------------------------------------
 
-def predict(model: nn.Module, image_bytes: bytes) -> dict:
+def predict(model: nn.Module, image_bytes: bytes, model_type: str = "bccd") -> dict:
     """
     End-to-end inference: raw image bytes -> full structured response.
 
-    Measures total processing time including preprocessing and forward pass.
+    Measures total processing time including preprocessing, forward pass, and Grad-CAM.
 
     Args:
         model: Loaded PyTorch model in eval mode.
         image_bytes: Raw image file bytes.
+        model_type: Architecture identifier for Grad-CAM layer selection.
+                    "bccd" (ResNet50) or "efficientnet" (EfficientNet-B0).
 
     Returns:
         dict matching the API response format:
@@ -205,6 +212,7 @@ def predict(model: nn.Module, image_bytes: bytes) -> dict:
             confidence (float)         — risk label confidence
             cell_breakdown (dict)      — per-class probabilities for all 8 classes
             cell_type_summary (dict)   — aggregated WBC/RBC/Platelets category percentages
+            gradcam_heatmap (str|None) — base64 JPEG data URI of the heatmap overlay, or None on failure
             processing_time_ms (float) — wall-clock time in milliseconds
     """
     t_start = time.perf_counter()
@@ -224,6 +232,23 @@ def predict(model: nn.Module, image_bytes: bytes) -> dict:
     # Step 4: Aggregate cell types into clinical categories
     cell_type_summary = aggregate_cell_types(inference_result["cell_breakdown"])
 
+    # Step 5: Generate Grad-CAM heatmap — non-fatal, falls back to None on any error
+    try:
+        heatmap_base64 = generate_gradcam(
+            model=model,
+            image_tensor=tensor,
+            original_image_bytes=image_bytes,
+            target_class_idx=inference_result["predicted_idx"],
+            model_type=model_type,
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "Grad-CAM generation failed for model_type='%s': %s — heatmap set to None.",
+            model_type,
+            exc,
+        )
+        heatmap_base64 = None
+
     t_end = time.perf_counter()
     processing_time_ms = round((t_end - t_start) * 1000, 2)
 
@@ -232,5 +257,6 @@ def predict(model: nn.Module, image_bytes: bytes) -> dict:
         "confidence": risk_result["confidence"],
         "cell_breakdown": inference_result["cell_breakdown"],
         "cell_type_summary": cell_type_summary,
+        "gradcam_heatmap": heatmap_base64,
         "processing_time_ms": processing_time_ms,
     }

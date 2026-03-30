@@ -156,7 +156,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 |-------|----------------|--------|-----------|
 | 1. Schema & Data Foundation | 2/2 | Complete | 2026-03-30 |
 | 2. ML Microservice — Core Inference | 2/2 | Complete   | 2026-03-30 |
-| 3. ML Microservice — Advanced Features | 0/3 | Not started | - |
+| 3. ML Microservice — Advanced Features | 1/2 | In Progress|  |
 | 4. Backend API — Data Endpoints | 0/2 | Not started | - |
 | 5. Backend API — ML Integration | 0/1 | Not started | - |
 | 6. Frontend — Static Data Removal | 0/2 | Not started | - |
