@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import authRoutes from './modules/auth/auth.routes.js';
 import uploadRoutes from './modules/upload/upload.routes.js';
+import dashboardRoutes from './modules/dashboard/dashboard.routes.js';
 import { generateCaptcha } from './captcha.js';
 
 const app = express();
@@ -40,6 +41,7 @@ app.get('/api/captcha', generateCaptcha);
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
