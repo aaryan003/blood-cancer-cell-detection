@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 08-01-PLAN.md
-last_updated: "2026-03-31T09:48:54.533Z"
+stopped_at: Completed 08-03-PLAN.md
+last_updated: "2026-03-31T09:52:08.044Z"
 last_activity: 2026-03-30 — POST /predict endpoint and inference pipeline implemented
 progress:
   total_phases: 8
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 17
-  completed_plans: 16
+  completed_plans: 17
   percent: 31
 ---
 
@@ -66,6 +66,7 @@ Progress: [██░░░░░░░░] 31%
 | Phase 07-frontend-dynamic-dashboard P02 | 5 | 2 tasks | 5 files |
 | Phase 08-infrastructure P02 | 3 | 1 tasks | 2 files |
 | Phase 08-infrastructure P01 | 2 | 2 tasks | 5 files |
+| Phase 08-infrastructure P03 | 2 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -116,6 +117,9 @@ Recent decisions affecting current work:
 - [Phase 08-infrastructure]: VITE_API_URL build arg defaults to /api so frontend uses relative paths; Nginx proxies /api/ to backend:3001 — avoids hardcoding container hostnames in React bundle
 - [Phase 08-infrastructure]: Backend uses npm ci (all deps) not --omit=dev because server.js has import 'dotenv/config' which is a devDependency; Docker env vars supply values at runtime
 - [Phase 08-infrastructure]: prisma/ copied before src/ in Backend Dockerfile for Docker layer cache optimization — only src changes do not invalidate prisma generate layer
+- [Phase 08-infrastructure]: ML_SERVICE_URL uses Docker DNS service name (ml-service:8000) not IP for inter-container connectivity
+- [Phase 08-infrastructure]: VITE_API_URL=/api as build arg so React bundle uses relative paths; Nginx proxies /api/ to backend:3001
+- [Phase 08-infrastructure]: backend-data named volume mounts to /app/prisma for SQLite persistence across container restarts
 
 ### Pending Todos
 
@@ -128,6 +132,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T09:48:54.530Z
-Stopped at: Completed 08-01-PLAN.md
+Last session: 2026-03-31T09:52:08.041Z
+Stopped at: Completed 08-03-PLAN.md
 Resume file: None

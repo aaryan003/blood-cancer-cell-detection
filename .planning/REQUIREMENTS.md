@@ -52,9 +52,9 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **INFRA-01**: Dockerfile for frontend (multi-stage build, Nginx serving built React app)
 - [x] **INFRA-02**: Dockerfile for backend (Node.js/Express with Prisma)
 - [x] **INFRA-03**: Dockerfile for ML service (Python/FastAPI with model weights)
-- [ ] **INFRA-04**: Docker Compose file for frontend + backend services
-- [ ] **INFRA-05**: Docker Compose file for ML service (separate or combined)
-- [ ] **INFRA-06**: Environment files (.env) configured for all 3 services with proper defaults
+- [x] **INFRA-04**: Docker Compose file for frontend + backend services
+- [x] **INFRA-05**: Docker Compose file for ML service (separate or combined)
+- [x] **INFRA-06**: Environment files (.env) configured for all 3 services with proper defaults
 
 ## v2 Requirements
 
@@ -122,9 +122,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INFRA-01 | Phase 8 | Complete |
 | INFRA-02 | Phase 8 | Complete |
 | INFRA-03 | Phase 8 | Complete |
-| INFRA-04 | Phase 8 | Pending |
-| INFRA-05 | Phase 8 | Pending |
-| INFRA-06 | Phase 8 | Pending |
+| INFRA-04 | Phase 8 | Complete |
+| INFRA-05 | Phase 8 | Complete |
+| INFRA-06 | Phase 8 | Complete |
 
 **Coverage:**
 - v1 requirements: 31 total
