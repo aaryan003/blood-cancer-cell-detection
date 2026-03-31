@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 08-02-PLAN.md
-last_updated: "2026-03-31T09:46:56.656Z"
+stopped_at: Completed 08-01-PLAN.md
+last_updated: "2026-03-31T09:48:54.533Z"
 last_activity: 2026-03-30 — POST /predict endpoint and inference pipeline implemented
 progress:
   total_phases: 8
   completed_phases: 7
   total_plans: 17
-  completed_plans: 15
+  completed_plans: 16
   percent: 31
 ---
 
@@ -65,6 +65,7 @@ Progress: [██░░░░░░░░] 31%
 | Phase 07-frontend-dynamic-dashboard P01 | 5 | 1 tasks | 2 files |
 | Phase 07-frontend-dynamic-dashboard P02 | 5 | 2 tasks | 5 files |
 | Phase 08-infrastructure P02 | 3 | 1 tasks | 2 files |
+| Phase 08-infrastructure P01 | 2 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -112,6 +113,9 @@ Recent decisions affecting current work:
 - [Phase 08-infrastructure]: python:3.11-slim used (not alpine) because PyTorch has complex C dependencies that fail on musl/alpine
 - [Phase 08-infrastructure]: weights/ directory not ignored in .dockerignore — included in image; app handles missing weights gracefully with 503 degraded status
 - [Phase 08-infrastructure]: PYTHONUNBUFFERED=1 ensures uvicorn logs appear immediately in docker compose logs output
+- [Phase 08-infrastructure]: VITE_API_URL build arg defaults to /api so frontend uses relative paths; Nginx proxies /api/ to backend:3001 — avoids hardcoding container hostnames in React bundle
+- [Phase 08-infrastructure]: Backend uses npm ci (all deps) not --omit=dev because server.js has import 'dotenv/config' which is a devDependency; Docker env vars supply values at runtime
+- [Phase 08-infrastructure]: prisma/ copied before src/ in Backend Dockerfile for Docker layer cache optimization — only src changes do not invalidate prisma generate layer
 
 ### Pending Todos
 
@@ -124,6 +128,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T09:46:56.653Z
-Stopped at: Completed 08-02-PLAN.md
+Last session: 2026-03-31T09:48:54.530Z
+Stopped at: Completed 08-01-PLAN.md
 Resume file: None
