@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card } from "./ui/card";
 import { Activity, AlertCircle, Clock, TrendingUp } from "lucide-react";
 import {
@@ -16,6 +16,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { APP_CONFIG, API_ENDPOINTS } from "../constants";
 
 const getStatColorClasses = (color: string) => {
   switch (color) {
@@ -46,16 +47,124 @@ type PredictionItem = { name: string; value: number; color: string };
 type ActivityItem = { title: string; detail: string; time: string; status: string };
 
 export function DashboardOverview() {
-  const [stats] = useState<StatItem[]>([
+  const [stats, setStats] = useState<StatItem[]>([
     { title: "Total Samples Processed", value: "--", change: "--", icon: Activity, color: "blue" },
     { title: "Cancer Detected Cases", value: "--", change: "--", icon: AlertCircle, color: "red" },
     { title: "Pending Diagnoses", value: "--", change: "--", icon: Clock, color: "yellow" },
     { title: "Model Accuracy", value: "--", change: "--", icon: TrendingUp, color: "green" },
   ]);
-  const [trendData] = useState<TrendItem[]>([]);
-  const [hospitalData] = useState<HospitalItem[]>([]);
-  const [predictionData] = useState<PredictionItem[]>([]);
+  const [trendData, setTrendData] = useState<TrendItem[]>([]);
+  const [hospitalData, setHospitalData] = useState<HospitalItem[]>([]);
+  const [predictionData, setPredictionData] = useState<PredictionItem[]>([]);
   const [recentActivity] = useState<ActivityItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchDashboardData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [statsRes, trendsRes, hospitalsRes] = await Promise.all([
+        fetch(`${APP_CONFIG.apiUrl}${API_ENDPOINTS.DASHBOARD.STATS}`),
+        fetch(`${APP_CONFIG.apiUrl}${API_ENDPOINTS.DASHBOARD.TRENDS}`),
+        fetch(`${APP_CONFIG.apiUrl}${API_ENDPOINTS.DASHBOARD.HOSPITALS}`),
+      ]);
+
+      const [statsJson, trendsJson, hospitalsJson] = await Promise.all([
+        statsRes.json(),
+        trendsRes.json(),
+        hospitalsRes.json(),
+      ]);
+
+      const statsData = statsJson.data;
+      const { totalSamples, detectionRate, pendingDiagnoses, modelAccuracy } = statsData;
+
+      setStats([
+        {
+          title: "Total Samples Processed",
+          value: totalSamples.toLocaleString(),
+          change: "Total processed",
+          icon: Activity,
+          color: "blue",
+        },
+        {
+          title: "Cancer Detected Cases",
+          value: detectionRate.toFixed(1) + "%",
+          change: "Detection rate",
+          icon: AlertCircle,
+          color: "red",
+        },
+        {
+          title: "Pending Diagnoses",
+          value: pendingDiagnoses.toString(),
+          change: "Awaiting review",
+          icon: Clock,
+          color: "yellow",
+        },
+        {
+          title: "Model Accuracy",
+          value: modelAccuracy.toFixed(1) + "%",
+          change: "Current accuracy",
+          icon: TrendingUp,
+          color: "green",
+        },
+      ]);
+
+      const mappedTrends: TrendItem[] = (trendsJson.data as { month: string; cancerous: number; nonCancerous: number }[]).map(
+        (item) => ({
+          month: item.month,
+          detected: item.cancerous,
+          total: item.cancerous + item.nonCancerous,
+        })
+      );
+      setTrendData(mappedTrends);
+
+      const mappedHospitals: HospitalItem[] = (
+        hospitalsJson.data as { name: string; totalSamples: number; cancerousCount: number; detectionRate: number }[]
+      ).map((item) => ({
+        hospital: item.name,
+        cases: item.totalSamples,
+      }));
+      setHospitalData(mappedHospitals);
+
+      const cancerousCount = Math.round((totalSamples * detectionRate) / 100);
+      const nonCancerousCount = totalSamples - cancerousCount;
+      setPredictionData([
+        { name: "Cancerous", value: cancerousCount, color: "#ef4444" },
+        { name: "Non-Cancerous", value: nonCancerousCount, color: "#22c55e" },
+      ]);
+    } catch {
+      setError("Failed to load dashboard data");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-gray-500 text-sm">Loading dashboard...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <p className="text-red-500 text-sm">{error}</p>
+        <button
+          onClick={fetchDashboardData}
+          className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
