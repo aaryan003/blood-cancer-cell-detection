@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Search, Shield, User } from "lucide-react";
+import { Search, Shield, User, RefreshCw } from "lucide-react";
 import { LucideIcon } from "lucide-react";
+import { APP_CONFIG, API_ENDPOINTS } from "../constants";
 
 type AuditLog = {
   id: number;
@@ -15,6 +17,13 @@ type AuditLog = {
   ipAddress: string;
   severity: string;
   icon: LucideIcon;
+};
+
+type Pagination = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
 };
 
 const getSeverityBadge = (severity: string) => {
@@ -31,13 +40,62 @@ const getSeverityBadge = (severity: string) => {
 };
 
 export function AuditLogs() {
-  const [logs] = useState<AuditLog[]>([]);
+  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<Pagination>({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+  });
+
+  const fetchLogs = (page: number) => {
+    setLoading(true);
+    setError(null);
+    fetch(
+      `${APP_CONFIG.apiUrl}${API_ENDPOINTS.AUDIT_LOGS}?page=${page}&limit=${pagination.limit}`,
+      { credentials: "include" }
+    )
+      .then((res) => res.json())
+      .then((result) => {
+        if (result.success) {
+          const mapped: AuditLog[] = result.data.map(
+            (item: any, index: number) => ({
+              id: index,
+              timestamp: new Date(item.createdAt).toLocaleString(),
+              user: item.userName,
+              role: item.userRole,
+              action: item.action,
+              details: "",
+              ipAddress: item.ipAddress,
+              severity: "info",
+              icon: Shield,
+            })
+          );
+          setLogs(mapped);
+          setPagination((prev) => ({ ...prev, ...result.pagination, page }));
+        } else {
+          setError(result.message || "Failed to load audit logs");
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("Network error: could not reach server");
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    fetchLogs(pagination.page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagination.page]);
 
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-gray-900">Audit & Security Logs</h1>
+        <h1 className="text-gray-900">Audit &amp; Security Logs</h1>
         <p className="text-gray-500 mt-1">
           System activity monitoring and security audit trail
         </p>
@@ -77,7 +135,9 @@ export function AuditLogs() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Total Events</p>
-              <p className="text-2xl text-gray-900">--</p>
+              <p className="text-2xl text-gray-900">
+                {loading ? "--" : pagination.total}
+              </p>
             </div>
           </div>
         </Card>
@@ -119,15 +179,36 @@ export function AuditLogs() {
       {/* Audit Log List */}
       <Card className="overflow-hidden">
         <div className="divide-y divide-gray-200">
-          {logs.length === 0 ? (
+          {loading ? (
             <div className="p-12 text-center">
-              <p className="text-gray-400 text-sm">No audit log entries available</p>
+              <p className="text-gray-500 text-sm">Loading audit logs...</p>
+            </div>
+          ) : error ? (
+            <div className="p-12 text-center space-y-4">
+              <p className="text-red-600 text-sm">{error}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fetchLogs(pagination.page)}
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Retry
+              </Button>
+            </div>
+          ) : logs.length === 0 ? (
+            <div className="p-12 text-center">
+              <p className="text-gray-400 text-sm">
+                No audit log entries available
+              </p>
             </div>
           ) : (
             logs.map((log) => {
               const Icon = log.icon;
               return (
-                <div key={log.id} className="p-6 hover:bg-gray-50 transition-colors">
+                <div
+                  key={log.id}
+                  className="p-6 hover:bg-gray-50 transition-colors"
+                >
                   <div className="flex items-start gap-4">
                     <div className="p-2 bg-gray-100 rounded-lg flex-shrink-0">
                       <Icon className="w-5 h-5 text-gray-600" />
@@ -141,7 +222,11 @@ export function AuditLogs() {
                               {log.severity}
                             </Badge>
                           </div>
-                          <p className="text-sm text-gray-600 mb-2">{log.details}</p>
+                          {log.details && (
+                            <p className="text-sm text-gray-600 mb-2">
+                              {log.details}
+                            </p>
+                          )}
                           <div className="flex items-center gap-4 text-xs text-gray-500">
                             <span className="flex items-center gap-1">
                               <User className="w-3 h-3" />
@@ -163,10 +248,38 @@ export function AuditLogs() {
         </div>
 
         {/* Pagination */}
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-          <p className="text-sm text-gray-600 text-center">
-            {logs.length === 0 ? "No entries" : `Showing ${logs.length} entries`}
+        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
+          <p className="text-sm text-gray-600">
+            {loading
+              ? "Loading..."
+              : error
+              ? "Error loading data"
+              : pagination.total === 0
+              ? "No entries"
+              : `Page ${pagination.page} of ${pagination.totalPages} (${pagination.total} total)`}
           </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={loading || pagination.page <= 1}
+              onClick={() =>
+                setPagination((prev) => ({ ...prev, page: prev.page - 1 }))
+              }
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={loading || pagination.page >= pagination.totalPages}
+              onClick={() =>
+                setPagination((prev) => ({ ...prev, page: prev.page + 1 }))
+              }
+            >
+              Next
+            </Button>
+          </div>
         </div>
       </Card>
     </div>
