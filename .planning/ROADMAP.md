@@ -140,12 +140,12 @@ Plans:
   2. docker compose up starts all three services and they communicate with each other correctly
   3. Environment variables for all services are defined in .env files with documented defaults — no secrets hardcoded in Dockerfiles or Compose files
   4. The full diagnostic workflow (upload image → ML prediction → dashboard display) works end-to-end in the containerized environment
-**Plans**: 2 plans
+**Plans**: 3 plans
 
 Plans:
-- [ ] 08-01: Write Dockerfile for frontend (multi-stage: build React, serve with Nginx) and backend (Node.js/Express with Prisma)
-- [ ] 08-02: Write Dockerfile for ML service (Python/FastAPI with model weights)
-- [ ] 08-03: Write Docker Compose file(s) for all three services and configure .env files
+- [ ] 08-01-PLAN.md — Dockerfiles for frontend (multi-stage React+Nginx) and backend (Node.js/Express with Prisma)
+- [ ] 08-02-PLAN.md — Dockerfile for ML service (Python/FastAPI with model weights)
+- [ ] 08-03-PLAN.md — Docker Compose orchestration and .env configuration for all three services
 
 ## Progress
 
@@ -160,5 +160,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 4. Backend API — Data Endpoints | 2/2 | Complete   | 2026-03-30 |
 | 5. Backend API — ML Integration | 1/1 | Complete   | 2026-03-31 |
 | 6. Frontend — Static Data Removal | 2/2 | Complete    | 2026-03-31 |
-| 7. Frontend — Dynamic Dashboard | 3/3 | Complete   | 2026-03-31 |
-| 8. Infrastructure | 0/3 | Not started | - |
+| 7. Frontend — Dynamic Dashboard | 3/3 | Complete    | 2026-03-31 |
+| 8. Infrastructure | 1/3 | In Progress|  |
