@@ -14,24 +14,25 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-// Mock diagnosis data
-const mockDiagnosis = {
-  sampleId: "BCS-2024-0451",
-  patientAge: 45,
-  patientGender: "Female",
-  hospitalId: "HSP-001",
-  hospitalName: "City General Hospital",
-  dateProcessed: "2024-01-24 14:35",
-  prediction: "Cancerous",
-  confidence: 94.8,
-  cellType: "Acute Lymphoblastic Leukemia (ALL)",
-  modelVersion: "v2.3.1",
-  imageUrl: "https://images.unsplash.com/photo-1636386689060-37d233b5d345?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxibG9vZCUyMGNlbGxzJTIwbWljcm9zY29wZXxlbnwxfHx8fDE3NjkyNzk4NjF8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+type DiagnosisData = {
+  sampleId: string;
+  patientAge: number;
+  patientGender: string;
+  hospitalId: string;
+  hospitalName: string;
+  dateProcessed: string;
+  prediction: string;
+  confidence: number;
+  cellType?: string;
+  modelVersion: string;
+  imageUrl?: string;
 };
 
 export function DiagnosisResults() {
   const [doctorNotes, setDoctorNotes] = useState("");
-  const isCancerous = mockDiagnosis.prediction === "Cancerous";
+  const [diagnosis] = useState<DiagnosisData | null>(null);
+
+  const isCancerous = diagnosis?.prediction === "Cancerous";
 
   const handleSaveNotes = () => {
     alert("Doctor notes saved successfully!");
@@ -40,6 +41,31 @@ export function DiagnosisResults() {
   const handleDownloadReport = () => {
     alert("Downloading diagnosis report...");
   };
+
+  if (diagnosis === null) {
+    return (
+      <div className="max-w-6xl space-y-6">
+        {/* Page Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-gray-900">Diagnosis Results</h1>
+            <p className="text-gray-500 mt-1">
+              Detailed analysis and prediction results
+            </p>
+          </div>
+          <Button onClick={handleDownloadReport} className="bg-blue-600 hover:bg-blue-700">
+            <Download className="w-4 h-4 mr-2" />
+            Download Report
+          </Button>
+        </div>
+        <Card className="p-12">
+          <p className="text-gray-400 text-sm text-center">
+            No diagnosis data loaded. Select a diagnosis to view results.
+          </p>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl space-y-6">
@@ -97,22 +123,28 @@ export function DiagnosisResults() {
         <Card className="p-6">
           <h3 className="text-gray-900 mb-4">Uploaded Blood Cell Image</h3>
           <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-            <img
-              src={mockDiagnosis.imageUrl}
-              alt="Blood cell sample"
-              className="w-full h-full object-cover"
-            />
+            {diagnosis.imageUrl ? (
+              <img
+                src={diagnosis.imageUrl}
+                alt="Blood cell sample"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <p className="text-gray-400 text-sm">No image available</p>
+              </div>
+            )}
           </div>
           <div className="mt-4 space-y-2">
             <div className="flex items-center gap-2 text-sm">
               <FileText className="w-4 h-4 text-gray-500" />
               <span className="text-gray-600">Sample ID:</span>
-              <span className="text-gray-900">{mockDiagnosis.sampleId}</span>
+              <span className="text-gray-900">{diagnosis.sampleId}</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Calendar className="w-4 h-4 text-gray-500" />
               <span className="text-gray-600">Processed:</span>
-              <span className="text-gray-900">{mockDiagnosis.dateProcessed}</span>
+              <span className="text-gray-900">{diagnosis.dateProcessed}</span>
             </div>
           </div>
         </Card>
@@ -132,10 +164,10 @@ export function DiagnosisResults() {
                       : "bg-green-100 text-green-800"
                   }`}
                 >
-                  {mockDiagnosis.prediction}
+                  {diagnosis.prediction}
                 </Badge>
                 <span className="text-sm text-gray-500">
-                  {mockDiagnosis.confidence}% confidence
+                  {diagnosis.confidence}% confidence
                 </span>
               </div>
             </div>
@@ -144,30 +176,30 @@ export function DiagnosisResults() {
             <div>
               <div className="flex items-center justify-between text-sm mb-2">
                 <span className="text-gray-600">Confidence Score</span>
-                <span className="text-gray-900">{mockDiagnosis.confidence}%</span>
+                <span className="text-gray-900">{diagnosis.confidence}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3">
                 <div
                   className={`h-3 rounded-full ${
                     isCancerous ? "bg-red-600" : "bg-green-600"
                   }`}
-                  style={{ width: `${mockDiagnosis.confidence}%` }}
+                  style={{ width: `${diagnosis.confidence}%` }}
                 />
               </div>
             </div>
 
             {/* Cell Classification */}
-            {isCancerous && (
+            {isCancerous && diagnosis.cellType && (
               <div className="p-4 bg-red-50 rounded-lg border border-red-100">
                 <p className="text-sm text-gray-600 mb-1">Cell Classification</p>
-                <p className="text-red-900">{mockDiagnosis.cellType}</p>
+                <p className="text-red-900">{diagnosis.cellType}</p>
               </div>
             )}
 
             {/* Model Version */}
             <div className="text-sm">
               <span className="text-gray-600">Model Version: </span>
-              <span className="text-gray-900">{mockDiagnosis.modelVersion}</span>
+              <span className="text-gray-900">{diagnosis.modelVersion}</span>
             </div>
           </div>
         </Card>
@@ -182,7 +214,7 @@ export function DiagnosisResults() {
             <div>
               <p className="text-sm text-gray-600">Age / Gender</p>
               <p className="text-gray-900">
-                {mockDiagnosis.patientAge} years / {mockDiagnosis.patientGender}
+                {diagnosis.patientAge} years / {diagnosis.patientGender}
               </p>
             </div>
           </div>
@@ -190,15 +222,15 @@ export function DiagnosisResults() {
             <Building2 className="w-5 h-5 text-gray-500 mt-0.5" />
             <div>
               <p className="text-sm text-gray-600">Hospital</p>
-              <p className="text-gray-900">{mockDiagnosis.hospitalName}</p>
-              <p className="text-sm text-gray-500">{mockDiagnosis.hospitalId}</p>
+              <p className="text-gray-900">{diagnosis.hospitalName}</p>
+              <p className="text-sm text-gray-500">{diagnosis.hospitalId}</p>
             </div>
           </div>
           <div className="flex items-start gap-3">
             <Calendar className="w-5 h-5 text-gray-500 mt-0.5" />
             <div>
               <p className="text-sm text-gray-600">Analysis Date</p>
-              <p className="text-gray-900">{mockDiagnosis.dateProcessed}</p>
+              <p className="text-gray-900">{diagnosis.dateProcessed}</p>
             </div>
           </div>
         </div>
