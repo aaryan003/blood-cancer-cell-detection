@@ -159,6 +159,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 3. ML Microservice — Advanced Features | 2/2 | Complete   | 2026-03-30 |
 | 4. Backend API — Data Endpoints | 2/2 | Complete   | 2026-03-30 |
 | 5. Backend API — ML Integration | 1/1 | Complete   | 2026-03-31 |
-| 6. Frontend — Static Data Removal | 0/2 | Not started | - |
+| 6. Frontend — Static Data Removal | 1/2 | In Progress|  |
 | 7. Frontend — Dynamic Dashboard | 0/3 | Not started | - |
 | 8. Infrastructure | 0/3 | Not started | - |

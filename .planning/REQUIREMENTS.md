@@ -43,7 +43,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Frontend Cleanup
 
 - [ ] **FE-01**: Remove all hardcoded mock/static data from DashboardOverview, DiagnosisResults, ModelMetrics, PatientReports, AuditLogs
-- [ ] **FE-02**: Remove localStorage mock fallback from authService.ts
+- [x] **FE-02**: Remove localStorage mock fallback from authService.ts
 - [ ] **FE-03**: Connect all dashboard components to backend API endpoints with loading/error states
 - [ ] **FE-04**: Upload page supports model selection (dropdown/radio for base BCCD vs EfficientNet vs both)
 
@@ -112,7 +112,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | API-08 | Phase 4 | Complete |
 | API-06 | Phase 5 | Complete |
 | FE-01 | Phase 6 | Pending |
-| FE-02 | Phase 6 | Pending |
+| FE-02 | Phase 6 | Complete |
 | FE-03 | Phase 7 | Pending |
 | FE-04 | Phase 7 | Pending |
 | DASH-01 | Phase 7 | Pending |
