@@ -25,14 +25,14 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Backend API
 
-- [ ] **API-01**: GET endpoint for dashboard statistics (aggregated from diagnosis/upload tables)
-- [ ] **API-02**: GET endpoint for diagnosis results with pagination
-- [ ] **API-03**: GET endpoint for patient reports with pagination
-- [ ] **API-04**: GET endpoint for model performance metrics
-- [ ] **API-05**: GET endpoint for audit logs with pagination
+- [x] **API-01**: GET endpoint for dashboard statistics (aggregated from diagnosis/upload tables)
+- [x] **API-02**: GET endpoint for diagnosis results with pagination
+- [x] **API-03**: GET endpoint for patient reports with pagination
+- [x] **API-04**: GET endpoint for model performance metrics
+- [x] **API-05**: GET endpoint for audit logs with pagination
 - [ ] **API-06**: POST endpoint that proxies uploaded image to ML service and stores prediction result in database
-- [ ] **API-07**: GET endpoint for trend data (monthly detection aggregations)
-- [ ] **API-08**: GET endpoint for hospital distribution data
+- [x] **API-07**: GET endpoint for trend data (monthly detection aggregations)
+- [x] **API-08**: GET endpoint for hospital distribution data
 
 ### Data & Schema
 
@@ -103,13 +103,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ML-03 | Phase 3 | Complete |
 | ML-04 | Phase 3 | Complete |
 | ML-06 | Phase 3 | Complete |
-| API-01 | Phase 4 | Pending |
-| API-02 | Phase 4 | Pending |
-| API-03 | Phase 4 | Pending |
-| API-04 | Phase 4 | Pending |
-| API-05 | Phase 4 | Pending |
-| API-07 | Phase 4 | Pending |
-| API-08 | Phase 4 | Pending |
+| API-01 | Phase 4 | Complete |
+| API-02 | Phase 4 | Complete |
+| API-03 | Phase 4 | Complete |
+| API-04 | Phase 4 | Complete |
+| API-05 | Phase 4 | Complete |
+| API-07 | Phase 4 | Complete |
+| API-08 | Phase 4 | Complete |
 | API-06 | Phase 5 | Pending |
 | FE-01 | Phase 6 | Pending |
 | FE-02 | Phase 6 | Pending |

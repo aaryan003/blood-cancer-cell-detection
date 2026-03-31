@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Schema & Data Foundation** - Update Prisma schema for ML fields and seed the database with demo data
 - [x] **Phase 2: ML Microservice — Core Inference** - FastAPI service loads both models and returns predictions with confidence scores (completed 2026-03-30)
 - [x] **Phase 3: ML Microservice — Advanced Features** - Cell type breakdown, Grad-CAM heatmaps, and side-by-side model comparison (completed 2026-03-30)
-- [ ] **Phase 4: Backend API — Data Endpoints** - All Express endpoints for dashboard stats, diagnoses, reports, metrics, trends, hospitals, and audit logs
+- [x] **Phase 4: Backend API — Data Endpoints** - All Express endpoints for dashboard stats, diagnoses, reports, metrics, trends, hospitals, and audit logs (completed 2026-03-30)
 - [ ] **Phase 5: Backend API — ML Integration** - Proxy endpoint connecting Node.js backend to ML service and persisting predictions
 - [ ] **Phase 6: Frontend — Static Data Removal** - Strip all hardcoded mock data and localStorage auth fallback from frontend
 - [ ] **Phase 7: Frontend — Dynamic Dashboard** - Connect every dashboard component and upload page to live API endpoints
@@ -157,7 +157,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 1. Schema & Data Foundation | 2/2 | Complete | 2026-03-30 |
 | 2. ML Microservice — Core Inference | 2/2 | Complete   | 2026-03-30 |
 | 3. ML Microservice — Advanced Features | 2/2 | Complete   | 2026-03-30 |
-| 4. Backend API — Data Endpoints | 0/2 | Not started | - |
+| 4. Backend API — Data Endpoints | 2/2 | Complete   | 2026-03-30 |
 | 5. Backend API — ML Integration | 0/1 | Not started | - |
 | 6. Frontend — Static Data Removal | 0/2 | Not started | - |
 | 7. Frontend — Dynamic Dashboard | 0/3 | Not started | - |
