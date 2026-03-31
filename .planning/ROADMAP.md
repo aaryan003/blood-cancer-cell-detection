@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: ML Microservice — Core Inference** - FastAPI service loads both models and returns predictions with confidence scores (completed 2026-03-30)
 - [x] **Phase 3: ML Microservice — Advanced Features** - Cell type breakdown, Grad-CAM heatmaps, and side-by-side model comparison (completed 2026-03-30)
 - [x] **Phase 4: Backend API — Data Endpoints** - All Express endpoints for dashboard stats, diagnoses, reports, metrics, trends, hospitals, and audit logs (completed 2026-03-30)
-- [ ] **Phase 5: Backend API — ML Integration** - Proxy endpoint connecting Node.js backend to ML service and persisting predictions
+- [x] **Phase 5: Backend API — ML Integration** - Proxy endpoint connecting Node.js backend to ML service and persisting predictions (completed 2026-03-31)
 - [ ] **Phase 6: Frontend — Static Data Removal** - Strip all hardcoded mock data and localStorage auth fallback from frontend
 - [ ] **Phase 7: Frontend — Dynamic Dashboard** - Connect every dashboard component and upload page to live API endpoints
 - [ ] **Phase 8: Infrastructure** - Dockerfiles and Docker Compose for all three services with environment configuration
@@ -95,10 +95,10 @@ Plans:
   2. The prediction result (classification, confidence, cell breakdown, heatmap URL) is saved to the Diagnosis table in the database
   3. The backend returns the complete prediction result to the caller in a single response
   4. If the ML service is unavailable, the backend returns a clear error rather than hanging
-**Plans**: 2 plans
+**Plans**: 1 plan
 
 Plans:
-- [ ] 05-01: Implement ML proxy endpoint in Express — forward upload to FastAPI, persist result, return to client
+- [ ] 05-01-PLAN.md — Implement ML proxy endpoint in Express: forward upload to FastAPI, persist Diagnosis, return result to client
 
 ### Phase 6: Frontend — Static Data Removal
 **Goal**: All hardcoded mock data and fake auth fallbacks are removed from the frontend codebase
@@ -158,7 +158,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 2. ML Microservice — Core Inference | 2/2 | Complete   | 2026-03-30 |
 | 3. ML Microservice — Advanced Features | 2/2 | Complete   | 2026-03-30 |
 | 4. Backend API — Data Endpoints | 2/2 | Complete   | 2026-03-30 |
-| 5. Backend API — ML Integration | 0/1 | Not started | - |
+| 5. Backend API — ML Integration | 1/1 | Complete   | 2026-03-31 |
 | 6. Frontend — Static Data Removal | 0/2 | Not started | - |
 | 7. Frontend — Dynamic Dashboard | 0/3 | Not started | - |
 | 8. Infrastructure | 0/3 | Not started | - |

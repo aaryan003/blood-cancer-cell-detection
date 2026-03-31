@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-03-30T18:53:07.375Z"
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-03-31T04:24:26.059Z"
 last_activity: 2026-03-30 — POST /predict endpoint and inference pipeline implemented
 progress:
   total_phases: 8
-  completed_phases: 4
-  total_plans: 8
-  completed_plans: 8
+  completed_phases: 5
+  total_plans: 9
+  completed_plans: 9
   percent: 31
 ---
 
@@ -58,6 +58,7 @@ Progress: [██░░░░░░░░] 31%
 | Phase 03-ml-microservice-advanced-features P02 | 3 | 2 tasks | 2 files |
 | Phase 04-backend-api-data-endpoints P01 | 2 min | 2 tasks | 4 files |
 | Phase 04-backend-api-data-endpoints P02 | 1 | 2 tasks | 13 files |
+| Phase 05-backend-api-ml-integration P01 | 10 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,9 @@ Recent decisions affecting current work:
 - [Phase 04-backend-api-data-endpoints]: Promise.all for parallel Prisma queries in getStats() to reduce response latency
 - [Phase 04-backend-api-data-endpoints]: Metrics endpoint has no pagination (small dataset) — returns all records as flat array
 - [Phase 04-backend-api-data-endpoints]: Pagination limit clamped to max 100 per request to prevent large query abuse
+- [Phase 05-backend-api-ml-integration]: Node 18 built-in fetch/FormData/Blob used for ML proxy — no additional HTTP client dependency needed
+- [Phase 05-backend-api-ml-integration]: model=both comparison response persists only bccd result as primary Diagnosis record
+- [Phase 05-backend-api-ml-integration]: FastAPI 503 mapped to local 502 Bad Gateway; AbortError/TimeoutError map to 504
 
 ### Pending Todos
 
@@ -102,6 +106,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T18:52:52.530Z
-Stopped at: Completed 04-02-PLAN.md
+Last session: 2026-03-31T04:24:26.054Z
+Stopped at: Completed 05-01-PLAN.md
 Resume file: None

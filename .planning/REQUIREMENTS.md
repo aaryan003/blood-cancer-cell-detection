@@ -30,7 +30,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **API-03**: GET endpoint for patient reports with pagination
 - [x] **API-04**: GET endpoint for model performance metrics
 - [x] **API-05**: GET endpoint for audit logs with pagination
-- [ ] **API-06**: POST endpoint that proxies uploaded image to ML service and stores prediction result in database
+- [x] **API-06**: POST endpoint that proxies uploaded image to ML service and stores prediction result in database
 - [x] **API-07**: GET endpoint for trend data (monthly detection aggregations)
 - [x] **API-08**: GET endpoint for hospital distribution data
 
@@ -110,7 +110,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | API-05 | Phase 4 | Complete |
 | API-07 | Phase 4 | Complete |
 | API-08 | Phase 4 | Complete |
-| API-06 | Phase 5 | Pending |
+| API-06 | Phase 5 | Complete |
 | FE-01 | Phase 6 | Pending |
 | FE-02 | Phase 6 | Pending |
 | FE-03 | Phase 7 | Pending |
