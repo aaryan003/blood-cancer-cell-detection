@@ -124,7 +124,7 @@ Plans:
   3. The hospital distribution chart and prediction distribution pie chart display real database values
   4. The upload page presents a model selection control (dropdown or radio) for base BCCD, EfficientNet, or both
   5. After uploading an image, the prediction result page shows classification, confidence, cell breakdown, and heatmap from the live ML pipeline
-**Plans**: 2 plans
+**Plans**: 3 plans
 
 Plans:
 - [ ] 07-01: Connect DashboardOverview to API stats endpoint; wire trend, hospital, and prediction distribution charts to their API endpoints
@@ -159,6 +159,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 3. ML Microservice — Advanced Features | 2/2 | Complete   | 2026-03-30 |
 | 4. Backend API — Data Endpoints | 2/2 | Complete   | 2026-03-30 |
 | 5. Backend API — ML Integration | 1/1 | Complete   | 2026-03-31 |
-| 6. Frontend — Static Data Removal | 2/2 | Complete   | 2026-03-31 |
+| 6. Frontend — Static Data Removal | 2/2 | Complete    | 2026-03-31 |
 | 7. Frontend — Dynamic Dashboard | 0/3 | Not started | - |
 | 8. Infrastructure | 0/3 | Not started | - |

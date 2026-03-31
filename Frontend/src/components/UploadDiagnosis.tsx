@@ -4,10 +4,102 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
-import { Upload, FileText, Image as ImageIcon, CheckCircle2, RefreshCw } from "lucide-react";
+import { Upload, FileText, Image as ImageIcon, CheckCircle2, RefreshCw, Loader2, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router";
 import { authService } from "../services/authService";
+import { APP_CONFIG, API_ENDPOINTS } from "../constants";
 import type { Captcha } from "../types";
+
+const MODEL_OPTIONS = [
+  {
+    value: "bccd",
+    label: "Base BCCD Model",
+    description: "Standard blood cell detection model",
+  },
+  {
+    value: "efficientnet",
+    label: "EfficientNet Model",
+    description: "Enhanced accuracy neural network",
+  },
+  {
+    value: "both",
+    label: "Both Models (Comparison)",
+    description: "Run both models and compare results side-by-side",
+  },
+];
+
+interface SinglePrediction {
+  prediction: string;
+  confidence: number;
+  model: string;
+  cell_type_summary?: Record<string, number>;
+  gradcam_heatmap?: string;
+}
+
+interface PredictionData {
+  diagnosis: { id: string; result: string; confidence: number; modelName: string };
+  prediction:
+    | (SinglePrediction & { comparison?: false })
+    | { comparison: true; results: { bccd: SinglePrediction; efficientnet: SinglePrediction } };
+}
+
+function SingleModelResult({ pred }: { pred: SinglePrediction }) {
+  const isCancerous = pred.prediction?.toLowerCase() === "cancerous";
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <span
+          className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+            isCancerous ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
+          }`}
+        >
+          {pred.prediction}
+        </span>
+        <span className="text-xs text-gray-500 uppercase tracking-wide">
+          Model: {pred.model}
+        </span>
+      </div>
+
+      <div>
+        <div className="flex justify-between text-sm mb-1">
+          <span className="text-gray-600">Confidence</span>
+          <span className="font-medium">{(pred.confidence * 100).toFixed(1)}%</span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div
+            className={`h-2 rounded-full ${isCancerous ? "bg-red-500" : "bg-green-500"}`}
+            style={{ width: `${(pred.confidence * 100).toFixed(1)}%` }}
+          />
+        </div>
+      </div>
+
+      {pred.cell_type_summary && Object.keys(pred.cell_type_summary).length > 0 && (
+        <div>
+          <p className="text-sm font-medium text-gray-700 mb-2">Cell Breakdown</p>
+          <div className="grid grid-cols-2 gap-2">
+            {Object.entries(pred.cell_type_summary).map(([cellType, count]) => (
+              <div key={cellType} className="flex justify-between text-sm bg-gray-50 px-3 py-1 rounded">
+                <span className="text-gray-600 capitalize">{cellType}</span>
+                <span className="font-medium">{count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {pred.gradcam_heatmap && (
+        <div>
+          <p className="text-sm font-medium text-gray-700 mb-2">Grad-CAM Heatmap</p>
+          <img
+            src={pred.gradcam_heatmap}
+            alt="Grad-CAM Heatmap"
+            className="w-full rounded-lg border border-gray-200"
+          />
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function UploadDiagnosis() {
   const navigate = useNavigate();
@@ -15,6 +107,10 @@ export function UploadDiagnosis() {
   const [labReport, setLabReport] = useState<File | null>(null);
   const [captcha, setCaptcha] = useState<Captcha | null>(null);
   const [captchaAnswer, setCaptchaAnswer] = useState("");
+  const [modelSelection, setModelSelection] = useState("bccd");
+  const [submitting, setSubmitting] = useState(false);
+  const [predictionResult, setPredictionResult] = useState<PredictionData | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     sampleId: "",
     patientAge: "",
@@ -54,17 +150,62 @@ export function UploadDiagnosis() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleNewAnalysis = () => {
+    setBloodCellImage(null);
+    setPredictionResult(null);
+    setSubmitError(null);
+    setFormData({
+      sampleId: "",
+      patientAge: "",
+      patientGender: "",
+      hospitalId: "",
+      additionalNotes: "",
+    });
+    setCaptchaAnswer("");
+    setModelSelection("bccd");
+    loadCaptcha();
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (captcha && !captchaAnswer.trim()) {
       alert("Please answer the CAPTCHA question");
       return;
     }
-    
-    // Mock submission
-    alert("Sample submitted for analysis!");
-    navigate("/results");
+
+    if (!bloodCellImage) {
+      alert("Please upload a blood cell image");
+      return;
+    }
+
+    setSubmitting(true);
+    setSubmitError(null);
+    setPredictionResult(null);
+
+    try {
+      const fd = new FormData();
+      fd.append("bloodCellImage", bloodCellImage);
+      fd.append("modelSelection", modelSelection);
+      fd.append("reportId", formData.sampleId);
+
+      const response = await fetch(`${APP_CONFIG.apiUrl}${API_ENDPOINTS.PREDICT}`, {
+        method: "POST",
+        body: fd,
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        setSubmitError(result.message || "Prediction failed");
+      } else {
+        setPredictionResult(result.data);
+      }
+    } catch {
+      setSubmitError("Unable to connect to the server. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -249,6 +390,36 @@ export function UploadDiagnosis() {
               />
             </div>
 
+            {/* Model Selection */}
+            <div className="space-y-2 md:col-span-2">
+              <Label>Model Selection *</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {MODEL_OPTIONS.map((option) => (
+                  <label
+                    key={option.value}
+                    className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      modelSelection === option.value
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 hover:bg-gray-50"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="modelSelection"
+                      value={option.value}
+                      checked={modelSelection === option.value}
+                      onChange={(e) => setModelSelection(e.target.value)}
+                      className="mt-1"
+                    />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{option.label}</p>
+                      <p className="text-xs text-gray-500">{option.description}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+
             {/* CAPTCHA Field */}
             <div className="space-y-2 md:col-span-2">
               {captcha ? (
@@ -292,13 +463,68 @@ export function UploadDiagnosis() {
           <Button
             type="submit"
             className="bg-blue-600 hover:bg-blue-700 text-white"
-            disabled={!bloodCellImage || !formData.sampleId || !formData.hospitalId || (captcha && !captchaAnswer.trim())}
+            disabled={
+              submitting ||
+              !bloodCellImage ||
+              !formData.sampleId ||
+              !formData.hospitalId ||
+              (captcha ? !captchaAnswer.trim() : false)
+            }
           >
-            <Upload className="w-4 h-4 mr-2" />
-            Analyze Sample
+            {submitting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Analyzing...
+              </>
+            ) : (
+              <>
+                <Upload className="w-4 h-4 mr-2" />
+                Analyze Sample
+              </>
+            )}
           </Button>
         </div>
+
+        {/* Submit Error */}
+        {submitError && (
+          <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            <p className="text-sm">{submitError}</p>
+          </div>
+        )}
       </form>
+
+      {/* Prediction Results */}
+      {predictionResult && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-gray-900">Prediction Results</h2>
+            <Button type="button" variant="outline" onClick={handleNewAnalysis}>
+              New Analysis
+            </Button>
+          </div>
+
+          {predictionResult.prediction && "comparison" in predictionResult.prediction && predictionResult.prediction.comparison ? (
+            /* Comparison mode: two side-by-side cards */
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card className="p-6">
+                <h3 className="text-gray-900 mb-4">BCCD Model</h3>
+                <SingleModelResult pred={(predictionResult.prediction as { comparison: true; results: { bccd: SinglePrediction; efficientnet: SinglePrediction } }).results.bccd} />
+              </Card>
+              <Card className="p-6">
+                <h3 className="text-gray-900 mb-4">EfficientNet Model</h3>
+                <SingleModelResult pred={(predictionResult.prediction as { comparison: true; results: { bccd: SinglePrediction; efficientnet: SinglePrediction } }).results.efficientnet} />
+              </Card>
+            </div>
+          ) : (
+            /* Single model result */
+            <Card className="p-6">
+              <h3 className="text-gray-900 mb-4">Analysis Result</h3>
+              <SingleModelResult pred={predictionResult.prediction as SinglePrediction} />
+            </Card>
+          )}
+        </div>
+      )}
     </div>
   );
 }

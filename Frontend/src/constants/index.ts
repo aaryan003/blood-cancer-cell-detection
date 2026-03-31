@@ -26,8 +26,14 @@ export const API_ENDPOINTS = {
   },
   CAPTCHA: '/api/captcha',
   UPLOAD: '/api/upload',
-  DIAGNOSIS: '/api/diagnosis',
+  PREDICT: '/api/predict',
+  DIAGNOSES: '/api/diagnoses',
   REPORTS: '/api/reports',
   METRICS: '/api/metrics',
-  AUDIT: '/api/audit',
+  AUDIT_LOGS: '/api/audit-logs',
+  DASHBOARD: {
+    STATS: '/api/dashboard/stats',
+    TRENDS: '/api/dashboard/trends',
+    HOSPITALS: '/api/dashboard/hospitals',
+  },
 };
