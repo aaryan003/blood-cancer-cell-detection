@@ -18,10 +18,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Dashboard
 
-- [ ] **DASH-01**: Dashboard overview shows real stats from database (total samples, detection rate, pending diagnoses, model accuracy)
-- [ ] **DASH-02**: Monthly detection trend line graph populated from database
-- [ ] **DASH-03**: Hospital distribution bar chart populated from database
-- [ ] **DASH-04**: Prediction distribution pie chart (cancerous vs non-cancerous) from database
+- [x] **DASH-01**: Dashboard overview shows real stats from database (total samples, detection rate, pending diagnoses, model accuracy)
+- [x] **DASH-02**: Monthly detection trend line graph populated from database
+- [x] **DASH-03**: Hospital distribution bar chart populated from database
+- [x] **DASH-04**: Prediction distribution pie chart (cancerous vs non-cancerous) from database
 
 ### Backend API
 
@@ -45,7 +45,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **FE-01**: Remove all hardcoded mock/static data from DashboardOverview, DiagnosisResults, ModelMetrics, PatientReports, AuditLogs
 - [x] **FE-02**: Remove localStorage mock fallback from authService.ts
 - [ ] **FE-03**: Connect all dashboard components to backend API endpoints with loading/error states
-- [ ] **FE-04**: Upload page supports model selection (dropdown/radio for base BCCD vs EfficientNet vs both)
+- [x] **FE-04**: Upload page supports model selection (dropdown/radio for base BCCD vs EfficientNet vs both)
 
 ### Infrastructure
 
@@ -114,11 +114,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FE-01 | Phase 6 | Complete |
 | FE-02 | Phase 6 | Complete |
 | FE-03 | Phase 7 | Pending |
-| FE-04 | Phase 7 | Pending |
-| DASH-01 | Phase 7 | Pending |
-| DASH-02 | Phase 7 | Pending |
-| DASH-03 | Phase 7 | Pending |
-| DASH-04 | Phase 7 | Pending |
+| FE-04 | Phase 7 | Complete |
+| DASH-01 | Phase 7 | Complete |
+| DASH-02 | Phase 7 | Complete |
+| DASH-03 | Phase 7 | Complete |
+| DASH-04 | Phase 7 | Complete |
 | INFRA-01 | Phase 8 | Pending |
 | INFRA-02 | Phase 8 | Pending |
 | INFRA-03 | Phase 8 | Pending |
