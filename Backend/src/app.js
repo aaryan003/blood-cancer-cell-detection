@@ -9,6 +9,7 @@ import diagnosesRoutes from './modules/diagnoses/diagnoses.routes.js';
 import reportsRoutes from './modules/reports/reports.routes.js';
 import metricsRoutes from './modules/metrics/metrics.routes.js';
 import auditLogsRoutes from './modules/audit-logs/auditLogs.routes.js';
+import predictRoutes from './modules/predict/predict.routes.js';
 import { generateCaptcha } from './captcha.js';
 
 const app = express();
@@ -50,6 +51,7 @@ app.use('/api/diagnoses', diagnosesRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/metrics', metricsRoutes);
 app.use('/api/audit-logs', auditLogsRoutes);
+app.use('/api/predict', predictRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
