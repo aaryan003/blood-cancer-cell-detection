@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find 'F:/GUNI/SEM 8/Backend/' -name *.py -o -name *.h5 -o -name *.pkl -o -name *.pth -o -name *.keras)"
+      "Bash(find 'F:/GUNI/SEM 8/Backend/' -name *.py -o -name *.h5 -o -name *.pkl -o -name *.pth -o -name *.keras)",
+      "Bash(npx prisma:*)"
     ]
   }
 }

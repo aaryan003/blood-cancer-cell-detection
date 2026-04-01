@@ -1,13 +1,13 @@
 import { Outlet, NavLink, useNavigate } from "react-router";
-import { 
-  LayoutDashboard, 
-  Upload, 
-  FileText, 
-  Activity, 
-  BarChart3, 
-  Users, 
-  Shield, 
-  User, 
+import {
+  LayoutDashboard,
+  Upload,
+  FileText,
+  Activity,
+  BarChart3,
+  Users,
+  Shield,
+  User,
   LogOut,
   Bell,
   ChevronRight
@@ -22,6 +22,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { authService } from "../services/authService";
+import { ROLE_LABELS } from "../constants";
 
 const navItems = [
   { path: "/dashboard", label: "Dashboard Overview", icon: LayoutDashboard, exact: true },
@@ -35,11 +37,16 @@ const navItems = [
 
 export function DashboardLayout() {
   const navigate = useNavigate();
+  const user = authService.getStoredUser();
+
+  const displayName = user?.name || "User";
+  const displayRole = user?.role
+    ? (ROLE_LABELS as Record<string, string>)[user.role] || user.role
+    : "Unknown";
 
   const handleLogout = () => {
-    // Mock logout functionality
-    alert("Logging out...");
-    navigate("/");
+    authService.logout();
+    navigate("/login");
   };
 
   return (
@@ -152,8 +159,8 @@ export function DashboardLayout() {
                       <User className="w-4 h-4 text-blue-700" />
                     </div>
                     <div className="text-left">
-                      <p className="text-sm">Dr. Sarah Johnson</p>
-                      <p className="text-xs text-gray-500">Doctor</p>
+                      <p className="text-sm">{displayName}</p>
+                      <p className="text-xs text-gray-500">{displayRole}</p>
                     </div>
                   </Button>
                 </DropdownMenuTrigger>

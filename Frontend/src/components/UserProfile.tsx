@@ -2,31 +2,147 @@ import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { User, Mail, Phone, Building2, Shield, Key } from "lucide-react";
-import { useState } from "react";
+import { User, Mail, Phone, Building2, Shield, Key, Loader2 } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { APP_CONFIG, API_ENDPOINTS, ROLE_LABELS } from "../constants";
+import { authService } from "../services/authService";
+import { Alert, AlertDescription } from "./ui/alert";
+
+interface ProfileData {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  phone: string;
+  department: string;
+  licenseNumber: string;
+  hospital: { id: string; name: string } | null;
+  createdAt: string;
+}
 
 export function UserProfile() {
-  const [profileData, setProfileData] = useState({
-    fullName: "Dr. Sarah Johnson",
-    email: "sarah.johnson@citygen.hospital",
-    phone: "+1 (555) 123-4567",
-    role: "Doctor",
-    hospital: "City General Hospital",
-    hospitalId: "HSP-001",
-    department: "Hematology",
-    licenseNumber: "MD-45678",
-  });
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const storedUser = authService.getStoredUser();
+
+  const fetchProfile = useCallback(async () => {
+    if (!storedUser?.id) {
+      setError("Not logged in. Please log in again.");
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      const res = await fetch(
+        `${APP_CONFIG.apiUrl}${API_ENDPOINTS.AUTH.PROFILE}?userId=${storedUser.id}`
+      );
+      const json = await res.json();
+      if (json.success && json.data?.user) {
+        const u = json.data.user;
+        setProfileData({
+          id: u.id,
+          name: u.name || "",
+          email: u.email || "",
+          role: u.role || "",
+          phone: u.phone || "",
+          department: u.department || "",
+          licenseNumber: u.licenseNumber || "",
+          hospital: u.hospital || null,
+          createdAt: u.createdAt || "",
+        });
+      } else {
+        setError("Failed to load profile.");
+      }
+    } catch {
+      setError("Could not connect to server.");
+    } finally {
+      setLoading(false);
+    }
+  }, [storedUser?.id]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setProfileData({
-      ...profileData,
-      [e.target.name]: e.target.value,
-    });
+    if (!profileData) return;
+    setProfileData({ ...profileData, [e.target.name]: e.target.value });
+    setError("");
+    setSuccess("");
   };
 
-  const handleSave = () => {
-    alert("Profile updated successfully!");
+  const handleSave = async () => {
+    if (!profileData) return;
+    setSaving(true);
+    setError("");
+    setSuccess("");
+    try {
+      const res = await fetch(
+        `${APP_CONFIG.apiUrl}${API_ENDPOINTS.AUTH.PROFILE}?userId=${profileData.id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: profileData.name,
+            phone: profileData.phone,
+            department: profileData.department,
+            licenseNumber: profileData.licenseNumber,
+          }),
+        }
+      );
+      const json = await res.json();
+      if (json.success) {
+        setSuccess("Profile updated successfully!");
+        // Update stored user data so the layout header reflects changes
+        if (json.data?.user) {
+          const u = json.data.user;
+          localStorage.setItem(
+            "userData",
+            JSON.stringify({ id: u.id, name: u.name, email: u.email, role: u.role })
+          );
+        }
+      } else {
+        setError(json.message || "Failed to save profile.");
+      }
+    } catch {
+      setError("Could not connect to server.");
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <span className="ml-3 text-gray-500">Loading profile...</span>
+      </div>
+    );
+  }
+
+  if (!profileData) {
+    return (
+      <div className="max-w-4xl">
+        <Alert variant="destructive">
+          <AlertDescription>{error || "Could not load profile data."}</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  const roleLabel =
+    (ROLE_LABELS as Record<string, string>)[profileData.role] || profileData.role;
+  const memberSince = profileData.createdAt
+    ? new Date(profileData.createdAt).toLocaleDateString("en-IN", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "--";
 
   return (
     <div className="max-w-4xl space-y-6">
@@ -45,13 +161,12 @@ export function UserProfile() {
             <User className="w-12 h-12 text-blue-700" />
           </div>
           <div className="flex-1">
-            <h2 className="text-gray-900">{profileData.fullName}</h2>
-            <p className="text-gray-600 mt-1">{profileData.role}</p>
-            <p className="text-sm text-gray-500 mt-1">{profileData.hospital}</p>
-            <div className="flex gap-2 mt-4">
-              <Button variant="outline" size="sm">Change Photo</Button>
-              <Button variant="outline" size="sm">Remove</Button>
-            </div>
+            <h2 className="text-gray-900">{profileData.name}</h2>
+            <p className="text-gray-600 mt-1">{roleLabel}</p>
+            {profileData.hospital && (
+              <p className="text-sm text-gray-500 mt-1">{profileData.hospital.name}</p>
+            )}
+            <p className="text-xs text-gray-400 mt-2">Member since {memberSince}</p>
           </div>
         </div>
       </Card>
@@ -61,13 +176,13 @@ export function UserProfile() {
         <h3 className="text-gray-900 mb-4">Personal Information</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label htmlFor="fullName">Full Name</Label>
+            <Label htmlFor="name">Full Name</Label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
-                id="fullName"
-                name="fullName"
-                value={profileData.fullName}
+                id="name"
+                name="name"
+                value={profileData.name}
                 onChange={handleInputChange}
                 className="pl-10"
               />
@@ -83,10 +198,11 @@ export function UserProfile() {
                 name="email"
                 type="email"
                 value={profileData.email}
-                onChange={handleInputChange}
-                className="pl-10"
+                disabled
+                className="pl-10 bg-gray-50"
               />
             </div>
+            <p className="text-xs text-gray-400">Email cannot be changed</p>
           </div>
 
           <div className="space-y-2">
@@ -98,6 +214,7 @@ export function UserProfile() {
                 name="phone"
                 value={profileData.phone}
                 onChange={handleInputChange}
+                placeholder="Enter your phone number"
                 className="pl-10"
               />
             </div>
@@ -112,6 +229,7 @@ export function UserProfile() {
                 name="licenseNumber"
                 value={profileData.licenseNumber}
                 onChange={handleInputChange}
+                placeholder="Enter your license number"
                 className="pl-10"
               />
             </div>
@@ -125,20 +243,13 @@ export function UserProfile() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label htmlFor="role">Role</Label>
-            <select
+            <Input
               id="role"
-              name="role"
-              value={profileData.role}
-              onChange={(e) =>
-                setProfileData({ ...profileData, role: e.target.value })
-              }
-              className="flex h-10 w-full rounded-md border border-input bg-input-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option>Doctor</option>
-              <option>Admin</option>
-              <option>Lab Technician</option>
-              <option>Hospital Staff</option>
-            </select>
+              value={roleLabel}
+              disabled
+              className="bg-gray-50"
+            />
+            <p className="text-xs text-gray-400">Role is assigned by an administrator</p>
           </div>
 
           <div className="space-y-2">
@@ -148,32 +259,24 @@ export function UserProfile() {
               name="department"
               value={profileData.department}
               onChange={handleInputChange}
+              placeholder="Enter your department"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="hospital">Hospital / Facility</Label>
-            <div className="relative">
-              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                id="hospital"
-                name="hospital"
-                value={profileData.hospital}
-                onChange={handleInputChange}
-                className="pl-10"
-              />
+          {profileData.hospital && (
+            <div className="space-y-2">
+              <Label htmlFor="hospital">Hospital / Facility</Label>
+              <div className="relative">
+                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  id="hospital"
+                  value={profileData.hospital.name}
+                  disabled
+                  className="pl-10 bg-gray-50"
+                />
+              </div>
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="hospitalId">Hospital ID</Label>
-            <Input
-              id="hospitalId"
-              name="hospitalId"
-              value={profileData.hospitalId}
-              onChange={handleInputChange}
-            />
-          </div>
+          )}
         </div>
       </Card>
 
@@ -186,52 +289,44 @@ export function UserProfile() {
               <Key className="w-5 h-5 text-gray-600" />
               <div>
                 <p className="text-sm text-gray-900">Password</p>
-                <p className="text-xs text-gray-500">Last changed 30 days ago</p>
+                <p className="text-xs text-gray-500">Change your account password</p>
               </div>
             </div>
-            <Button variant="outline" size="sm">Change Password</Button>
-          </div>
-
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-            <div className="flex items-center gap-3">
-              <Shield className="w-5 h-5 text-gray-600" />
-              <div>
-                <p className="text-sm text-gray-900">Two-Factor Authentication</p>
-                <p className="text-xs text-gray-500">Add an extra layer of security</p>
-              </div>
-            </div>
-            <Button variant="outline" size="sm">Enable 2FA</Button>
+            <Button variant="outline" size="sm" disabled>Change Password</Button>
           </div>
         </div>
       </Card>
 
-      {/* Activity Summary */}
-      <Card className="p-6">
-        <h3 className="text-gray-900 mb-4">Activity Summary</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-gray-600">Samples Analyzed</p>
-            <p className="text-2xl text-gray-900 mt-1">127</p>
-            <p className="text-xs text-gray-500 mt-1">This month</p>
-          </div>
-          <div className="p-4 bg-green-50 rounded-lg">
-            <p className="text-sm text-gray-600">Reports Generated</p>
-            <p className="text-2xl text-gray-900 mt-1">89</p>
-            <p className="text-xs text-gray-500 mt-1">This month</p>
-          </div>
-          <div className="p-4 bg-purple-50 rounded-lg">
-            <p className="text-sm text-gray-600">Last Login</p>
-            <p className="text-2xl text-gray-900 mt-1">Today</p>
-            <p className="text-xs text-gray-500 mt-1">14:30 from 192.168.1.45</p>
-          </div>
-        </div>
-      </Card>
+      {/* Alerts */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      {success && (
+        <Alert className="border-green-200 bg-green-50 text-green-800">
+          <AlertDescription>{success}</AlertDescription>
+        </Alert>
+      )}
 
       {/* Action Buttons */}
       <div className="flex justify-end gap-4">
-        <Button variant="outline">Cancel</Button>
-        <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-          Save Changes
+        <Button variant="outline" onClick={fetchProfile} disabled={saving}>
+          Cancel
+        </Button>
+        <Button
+          onClick={handleSave}
+          className="bg-blue-600 hover:bg-blue-700"
+          disabled={saving}
+        >
+          {saving ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            "Save Changes"
+          )}
         </Button>
       </div>
     </div>

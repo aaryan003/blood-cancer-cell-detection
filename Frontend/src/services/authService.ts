@@ -85,6 +85,11 @@ class AuthService {
         localStorage.setItem('authToken', result.data.token);
       }
 
+      // Store user data for profile/layout use
+      if (result.data?.user) {
+        localStorage.setItem('userData', JSON.stringify(result.data.user));
+      }
+
       return {
         success: true,
         data: result.data
@@ -100,10 +105,21 @@ class AuthService {
 
   logout() {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('userData');
   }
 
   isAuthenticated(): boolean {
-    return !!localStorage.getItem('authToken');
+    return !!localStorage.getItem('userData');
+  }
+
+  getStoredUser(): { id: string; name: string; email: string; role: string } | null {
+    const data = localStorage.getItem('userData');
+    if (!data) return null;
+    try {
+      return JSON.parse(data);
+    } catch {
+      return null;
+    }
   }
 }
 

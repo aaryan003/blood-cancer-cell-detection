@@ -1,4 +1,5 @@
 import { AuthService } from './auth.service.js';
+import { UserModel } from '../../models/User.model.js';
 
 export class AuthController {
   static async signup(req, res) {
@@ -167,6 +168,45 @@ export class AuthController {
         success: false,
         message: 'Internal server error. Please try again later.'
       });
+    }
+  }
+
+  static async getProfile(req, res) {
+    try {
+      const userId = req.query.userId;
+      if (!userId) {
+        return res.status(400).json({ success: false, message: 'userId is required' });
+      }
+
+      const user = await UserModel.findById(userId);
+      if (!user) {
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
+
+      res.json({ success: true, data: { user } });
+    } catch (error) {
+      console.error('Get profile error:', error);
+      res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+  }
+
+  static async updateProfile(req, res) {
+    try {
+      const userId = req.query.userId;
+      if (!userId) {
+        return res.status(400).json({ success: false, message: 'userId is required' });
+      }
+
+      const { name, phone, department, licenseNumber } = req.body;
+      const user = await UserModel.updateProfile(userId, { name, phone, department, licenseNumber });
+
+      res.json({ success: true, message: 'Profile updated successfully', data: { user } });
+    } catch (error) {
+      console.error('Update profile error:', error);
+      if (error.code === 'P2025') {
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
+      res.status(500).json({ success: false, message: 'Internal server error' });
     }
   }
 }

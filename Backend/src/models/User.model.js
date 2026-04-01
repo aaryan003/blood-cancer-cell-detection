@@ -1,5 +1,20 @@
 import prisma from '../config/prisma.js';
 
+const PROFILE_SELECT = {
+  id: true,
+  name: true,
+  email: true,
+  role: true,
+  phone: true,
+  department: true,
+  licenseNumber: true,
+  hospitalId: true,
+  hospital: {
+    select: { id: true, name: true }
+  },
+  createdAt: true
+};
+
 export class UserModel {
   static async create(userData) {
     try {
@@ -44,17 +59,33 @@ export class UserModel {
     try {
       const user = await prisma.user.findUnique({
         where: { id },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-          createdAt: true
-        }
+        select: PROFILE_SELECT
       });
       return user;
     } catch (error) {
       console.error('UserModel findById error:', error);
+      throw error;
+    }
+  }
+
+  static async updateProfile(id, data) {
+    try {
+      const allowedFields = ['name', 'phone', 'department', 'licenseNumber'];
+      const updateData = {};
+      for (const field of allowedFields) {
+        if (data[field] !== undefined) {
+          updateData[field] = data[field];
+        }
+      }
+
+      const user = await prisma.user.update({
+        where: { id },
+        data: updateData,
+        select: PROFILE_SELECT
+      });
+      return user;
+    } catch (error) {
+      console.error('UserModel updateProfile error:', error);
       throw error;
     }
   }

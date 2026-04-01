@@ -1,4 +1,5 @@
 import { PredictService } from './predict.service.js';
+import prisma from '../../config/prisma.js';
 
 const VALID_MODELS = ['bccd', 'efficientnet', 'both'];
 
@@ -21,12 +22,12 @@ export class PredictController {
         });
       }
 
-      // Validate reportId
-      const reportId = (req.body.reportId || '').trim();
-      if (!reportId) {
+      // Validate sampleId (used as reportId)
+      const sampleId = (req.body.reportId || '').trim();
+      if (!sampleId) {
         return res.status(400).json({
           success: false,
-          message: 'reportId is required',
+          message: 'reportId (sampleId) is required',
         });
       }
 
@@ -54,6 +55,39 @@ export class PredictController {
         });
       }
 
+      // --- Create Report if it doesn't exist ---
+      let report = await prisma.report.findUnique({ where: { sampleId } });
+      
+      if (!report) {
+        // Create a default hospital and patient if they don't exist
+        let hospital = await prisma.hospital.findFirst();
+        if (!hospital) {
+          hospital = await prisma.hospital.create({
+            data: {
+              name: 'Default Hospital',
+              address: 'N/A',
+            },
+          });
+        }
+
+        const patient = await prisma.patient.create({
+          data: {
+            name: 'Anonymous Patient',
+            age: parseInt(req.body.patientAge) || 0,
+            gender: (req.body.patientGender || 'OTHER').toUpperCase(),
+            hospitalId: hospital.id,
+          },
+        });
+
+        report = await prisma.report.create({
+          data: {
+            sampleId,
+            reportUrl: '',
+            patientId: patient.id,
+          },
+        });
+      }
+
       // --- Persist and respond ---
       let savedRecord;
       const isComparison = mlResult.comparison === true;
@@ -61,10 +95,10 @@ export class PredictController {
       try {
         if (isComparison) {
           // Dual-model: persist bccd result as primary diagnosis
-          savedRecord = await PredictService.persistDiagnosis(mlResult.results.bccd, reportId);
+          savedRecord = await PredictService.persistDiagnosis(mlResult.results.bccd, report.id);
         } else {
           // Single-model: persist the direct result
-          savedRecord = await PredictService.persistDiagnosis(mlResult, reportId);
+          savedRecord = await PredictService.persistDiagnosis(mlResult, report.id);
         }
       } catch (dbErr) {
         // Prisma unique constraint violation — diagnosis already exists for this report

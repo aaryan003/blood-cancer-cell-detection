@@ -23,6 +23,7 @@ export const API_ENDPOINTS = {
     LOGIN: '/api/auth/login',
     SIGNUP: '/api/auth/signup',
     LOGOUT: '/api/auth/logout',
+    PROFILE: '/api/auth/profile',
   },
   CAPTCHA: '/api/captcha',
   UPLOAD: '/api/upload',
