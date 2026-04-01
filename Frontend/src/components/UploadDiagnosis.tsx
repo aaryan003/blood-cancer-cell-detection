@@ -188,6 +188,12 @@ export function UploadDiagnosis() {
       fd.append("bloodCellImage", bloodCellImage);
       fd.append("modelSelection", modelSelection);
       fd.append("reportId", formData.sampleId);
+      fd.append("patientAge", formData.patientAge);
+      fd.append("patientGender", formData.patientGender);
+      fd.append("hospitalId", formData.hospitalId);
+      if (formData.additionalNotes) {
+        fd.append("additionalNotes", formData.additionalNotes);
+      }
 
       const response = await fetch(`${APP_CONFIG.apiUrl}${API_ENDPOINTS.PREDICT}`, {
         method: "POST",

@@ -1,5 +1,6 @@
 import { PredictService } from './predict.service.js';
 import prisma from '../../config/prisma.js';
+import crypto from 'crypto';
 
 const VALID_MODELS = ['bccd', 'efficientnet', 'both'];
 
@@ -57,14 +58,21 @@ export class PredictController {
 
       // --- Create Report if it doesn't exist ---
       let report = await prisma.report.findUnique({ where: { sampleId } });
-      
+
       if (!report) {
-        // Create a default hospital and patient if they don't exist
-        let hospital = await prisma.hospital.findFirst();
+        // Resolve hospital: look up by provided hospitalId or use/create a default
+        const hospitalIdInput = (req.body.hospitalId || '').trim();
+        let hospital = null;
+        if (hospitalIdInput) {
+          hospital = await prisma.hospital.findUnique({ where: { id: hospitalIdInput } });
+        }
+        if (!hospital) {
+          hospital = await prisma.hospital.findFirst();
+        }
         if (!hospital) {
           hospital = await prisma.hospital.create({
             data: {
-              name: 'Default Hospital',
+              name: hospitalIdInput || 'Default Hospital',
               address: 'N/A',
             },
           });
@@ -87,6 +95,36 @@ export class PredictController {
           },
         });
       }
+
+      // --- Create Upload record ---
+      const fileHash = crypto.createHash('sha256').update(imageFile.buffer).digest('hex');
+      const secureFilename = imageFile.secureFilename || imageFile.originalname;
+
+      // Find or create a system user for tracking uploads when no auth is present
+      let uploadUserId = req.user?.id;
+      if (!uploadUserId) {
+        let systemUser = await prisma.user.findUnique({ where: { email: 'system@bloodcancer.local' } });
+        if (!systemUser) {
+          systemUser = await prisma.user.create({
+            data: {
+              name: 'System',
+              email: 'system@bloodcancer.local',
+              password: crypto.randomBytes(32).toString('hex'),
+              role: 'ADMIN',
+            },
+          });
+        }
+        uploadUserId = systemUser.id;
+      }
+
+      await prisma.upload.create({
+        data: {
+          imageUrl: secureFilename,
+          fileHash,
+          userId: uploadUserId,
+          reportId: report.id,
+        },
+      });
 
       // --- Persist and respond ---
       let savedRecord;

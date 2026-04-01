@@ -5,7 +5,9 @@ RUN npm ci
 COPY prisma ./prisma
 RUN npx prisma generate
 COPY src ./src
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
 EXPOSE 3001
 ENV NODE_ENV=production
 ENV PORT=3001
-CMD ["node", "src/server.js"]
+CMD ["./docker-entrypoint.sh"]
