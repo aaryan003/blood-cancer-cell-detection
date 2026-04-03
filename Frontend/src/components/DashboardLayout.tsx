@@ -2,7 +2,6 @@ import { Outlet, NavLink, useNavigate } from "react-router";
 import {
   LayoutDashboard,
   Upload,
-  FileText,
   Activity,
   BarChart3,
   Users,

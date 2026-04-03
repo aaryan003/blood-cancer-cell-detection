@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Alert, AlertDescription } from "./ui/alert";
 import { authService } from "../services/authService";
 import { ROLES, ROLE_LABELS } from "../constants";
-import type { SignupData, Captcha } from "../types";
+import type { Captcha } from "../types";
 
 interface SignupFormData {
   name: string;
