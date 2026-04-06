@@ -1,14 +1,15 @@
 import { Router } from 'express';
 import { AuthController } from './auth.controller.js';
-import { validateCaptcha } from '../../captcha.js';
+// CAPTCHA temporarily disabled for development
+// import { validateCaptcha } from '../../captcha.js';
 
 const router = Router();
 
-// POST /api/auth/signup - with CAPTCHA
-router.post('/signup', validateCaptcha, AuthController.signup);
+// POST /api/auth/signup - CAPTCHA disabled
+router.post('/signup', AuthController.signup);
 
-// POST /api/auth/login - with CAPTCHA
-router.post('/login', validateCaptcha, AuthController.login);
+// POST /api/auth/login - CAPTCHA disabled
+router.post('/login', AuthController.login);
 
 // GET /api/auth/profile?userId=...
 router.get('/profile', AuthController.getProfile);
