@@ -1,14 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
-import { Upload, FileText, Image as ImageIcon, CheckCircle2, RefreshCw, Loader2, AlertCircle } from "lucide-react";
+import { Upload, FileText, Image as ImageIcon, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router";
-import { authService } from "../services/authService";
 import { APP_CONFIG, API_ENDPOINTS } from "../constants";
-import type { Captcha } from "../types";
 
 const MODEL_OPTIONS = [
   {
@@ -105,8 +103,6 @@ export function UploadDiagnosis() {
   const navigate = useNavigate();
   const [bloodCellImage, setBloodCellImage] = useState<File | null>(null);
   const [labReport, setLabReport] = useState<File | null>(null);
-  const [captcha, setCaptcha] = useState<Captcha | null>(null);
-  const [captchaAnswer, setCaptchaAnswer] = useState("");
   const [modelSelection, setModelSelection] = useState("bccd");
   const [submitting, setSubmitting] = useState(false);
   const [predictionResult, setPredictionResult] = useState<PredictionData | null>(null);
@@ -118,16 +114,6 @@ export function UploadDiagnosis() {
     hospitalId: "",
     additionalNotes: "",
   });
-
-  useEffect(() => {
-    loadCaptcha();
-  }, []);
-
-  const loadCaptcha = async () => {
-    const newCaptcha = await authService.fetchCaptcha();
-    setCaptcha(newCaptcha);
-    setCaptchaAnswer("");
-  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -161,18 +147,11 @@ export function UploadDiagnosis() {
       hospitalId: "",
       additionalNotes: "",
     });
-    setCaptchaAnswer("");
     setModelSelection("bccd");
-    loadCaptcha();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (captcha && !captchaAnswer.trim()) {
-      alert("Please answer the CAPTCHA question");
-      return;
-    }
 
     if (!bloodCellImage) {
       alert("Please upload a blood cell image");
@@ -426,38 +405,6 @@ export function UploadDiagnosis() {
               </div>
             </div>
 
-            {/* CAPTCHA Field */}
-            <div className="space-y-2 md:col-span-2">
-              {captcha ? (
-                <>
-                  <Label htmlFor="captcha">{captcha.question} *</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="captcha"
-                      type="number"
-                      placeholder="Enter answer"
-                      value={captchaAnswer}
-                      onChange={(e) => setCaptchaAnswer(e.target.value)}
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={loadCaptcha}
-                      title="Refresh CAPTCHA"
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <div className="flex items-center gap-2 text-amber-600">
-                  <RefreshCw className="h-4 w-4 animate-spin" />
-                  <span className="text-sm">Loading CAPTCHA...</span>
-                </div>
-              )}
-            </div>
           </div>
         </Card>
 
@@ -473,8 +420,7 @@ export function UploadDiagnosis() {
               submitting ||
               !bloodCellImage ||
               !formData.sampleId ||
-              !formData.hospitalId ||
-              (captcha ? !captchaAnswer.trim() : false)
+              !formData.hospitalId
             }
           >
             {submitting ? (

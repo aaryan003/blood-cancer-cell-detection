@@ -10,8 +10,6 @@ import reportsRoutes from './modules/reports/reports.routes.js';
 import metricsRoutes from './modules/metrics/metrics.routes.js';
 import auditLogsRoutes from './modules/audit-logs/auditLogs.routes.js';
 import predictRoutes from './modules/predict/predict.routes.js';
-import { generateCaptcha } from './captcha.js';
-
 const app = express();
 
 // Trust proxy - needed for rate limiting behind nginx
@@ -44,9 +42,6 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
-
-// CAPTCHA endpoint
-app.get('/api/captcha', generateCaptcha);
 
 // API routes
 app.use('/api/auth', authRoutes);

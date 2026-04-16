@@ -20,20 +20,13 @@ export interface SignupData {
   email: string;
   password: string;
   role: string;
-  captchaToken?: string;
-  captchaAnswer?: string;
+  recaptchaToken: string;
 }
 
 export interface LoginData {
   email: string;
   password: string;
-  captchaToken?: string;
-  captchaAnswer?: string;
-}
-
-export interface Captcha {
-  token: string;
-  question: string;
+  recaptchaToken: string;
 }
 
 export interface DiagnosisResult {

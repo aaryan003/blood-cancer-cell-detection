@@ -1,13 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router";
-import { Activity, Eye, EyeOff, Loader2, RefreshCw } from "lucide-react";
+import { Activity, Eye, EyeOff, Loader2 } from "lucide-react";
+import ReCAPTCHA from "react-google-recaptcha";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Alert, AlertDescription } from "./ui/alert";
 import { authService } from "../services/authService";
-import type { Captcha } from "../types";
+import { APP_CONFIG } from "../constants";
 
 interface LoginFormData {
   email: string;
@@ -16,25 +17,15 @@ interface LoginFormData {
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: ""
   });
-  const [captcha, setCaptcha] = useState<Captcha | null>(null);
-  const [captchaAnswer, setCaptchaAnswer] = useState("");
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    loadCaptcha();
-  }, []);
-
-  const loadCaptcha = async () => {
-    const newCaptcha = await authService.fetchCaptcha();
-    setCaptcha(newCaptcha);
-    setCaptchaAnswer("");
-  };
 
   const handleInputChange = (field: keyof LoginFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -46,9 +37,9 @@ export function LoginPage() {
       setError("Email address is required");
       return false;
     }
-    
+
     const cleanEmail = formData.email.trim().replace(/^mailto:/, '').toLowerCase();
-    
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
       setError("Please enter a valid email address");
       return false;
@@ -57,8 +48,8 @@ export function LoginPage() {
       setError("Password is required");
       return false;
     }
-    if (captcha && !captchaAnswer.trim()) {
-      setError("Please answer the CAPTCHA question");
+    if (!recaptchaToken) {
+      setError("Please complete the reCAPTCHA verification");
       return false;
     }
     return true;
@@ -66,7 +57,7 @@ export function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setIsLoading(true);
@@ -76,19 +67,21 @@ export function LoginPage() {
       const result = await authService.login({
         email: formData.email.trim().replace(/^mailto:/, '').toLowerCase(),
         password: formData.password,
-        ...(captcha && { captchaToken: captcha.token, captchaAnswer: captchaAnswer })
+        recaptchaToken: recaptchaToken!,
       });
 
       if (result.success) {
         navigate("/dashboard");
       } else {
         setError(result.error || "Invalid email or password");
-        loadCaptcha();
+        recaptchaRef.current?.reset();
+        setRecaptchaToken(null);
       }
     } catch (err) {
       console.error('Login error:', err);
       setError("Network error. Please check your connection and try again.");
-      loadCaptcha();
+      recaptchaRef.current?.reset();
+      setRecaptchaToken(null);
     } finally {
       setIsLoading(false);
     }
@@ -165,39 +158,14 @@ export function LoginPage() {
                 </div>
               </div>
 
-              {/* CAPTCHA Field */}
-              <div className="space-y-2">
-                {captcha ? (
-                  <>
-                    <Label htmlFor="captcha">{captcha.question} *</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="captcha"
-                        type="number"
-                        placeholder="Enter answer"
-                        value={captchaAnswer}
-                        onChange={(e) => setCaptchaAnswer(e.target.value)}
-                        disabled={isLoading}
-                        required
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={loadCaptcha}
-                        disabled={isLoading}
-                        title="Refresh CAPTCHA"
-                      >
-                        <RefreshCw className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex items-center gap-2 text-amber-600">
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                    <span className="text-sm">Loading CAPTCHA...</span>
-                  </div>
-                )}
+              {/* Google reCAPTCHA */}
+              <div className="flex justify-center">
+                <ReCAPTCHA
+                  ref={recaptchaRef}
+                  sitekey={APP_CONFIG.recaptchaSiteKey}
+                  onChange={(token) => setRecaptchaToken(token)}
+                  onExpired={() => setRecaptchaToken(null)}
+                />
               </div>
 
               {/* Error Alert */}

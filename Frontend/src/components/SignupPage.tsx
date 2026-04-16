@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router";
-import { Activity, Eye, EyeOff, Loader2, RefreshCw } from "lucide-react";
+import { Activity, Eye, EyeOff, Loader2 } from "lucide-react";
+import ReCAPTCHA from "react-google-recaptcha";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
@@ -8,8 +9,7 @@ import { Label } from "./ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Alert, AlertDescription } from "./ui/alert";
 import { authService } from "../services/authService";
-import { ROLES, ROLE_LABELS } from "../constants";
-import type { Captcha } from "../types";
+import { APP_CONFIG, ROLES, ROLE_LABELS } from "../constants";
 
 interface SignupFormData {
   name: string;
@@ -21,6 +21,7 @@ interface SignupFormData {
 
 export function SignupPage() {
   const navigate = useNavigate();
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
   const [formData, setFormData] = useState<SignupFormData>({
     name: "",
     email: "",
@@ -28,31 +29,19 @@ export function SignupPage() {
     confirmPassword: "",
     role: ""
   });
-  const [captcha, setCaptcha] = useState<Captcha | null>(null);
-  const [captchaAnswer, setCaptchaAnswer] = useState("");
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  useEffect(() => {
-    loadCaptcha();
-  }, []);
-
-  const loadCaptcha = async () => {
-    const newCaptcha = await authService.fetchCaptcha();
-    setCaptcha(newCaptcha);
-    setCaptchaAnswer("");
-  };
-
   const handleInputChange = (field: keyof SignupFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    setError(""); // Clear error when user starts typing
+    setError("");
   };
 
   const validateForm = (): boolean => {
-    // Name validation
     if (!formData.name.trim()) {
       setError("Full name is required");
       return false;
@@ -66,7 +55,6 @@ export function SignupPage() {
       return false;
     }
 
-    // Email validation
     if (!formData.email.trim()) {
       setError("Email address is required");
       return false;
@@ -77,7 +65,6 @@ export function SignupPage() {
       return false;
     }
 
-    // Password validation
     if (!formData.password) {
       setError("Password is required");
       return false;
@@ -91,21 +78,18 @@ export function SignupPage() {
       return false;
     }
 
-    // Confirm password validation
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match");
       return false;
     }
 
-    // Role validation
     if (!formData.role) {
       setError("Please select your role");
       return false;
     }
 
-    // CAPTCHA validation (only if loaded)
-    if (captcha && !captchaAnswer.trim()) {
-      setError("Please answer the CAPTCHA question");
+    if (!recaptchaToken) {
+      setError("Please complete the reCAPTCHA verification");
       return false;
     }
 
@@ -114,7 +98,7 @@ export function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setIsLoading(true);
@@ -127,7 +111,7 @@ export function SignupPage() {
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
         role: formData.role,
-        ...(captcha && { captchaToken: captcha.token, captchaAnswer: captchaAnswer })
+        recaptchaToken: recaptchaToken!,
       });
 
       if (result.success) {
@@ -139,17 +123,21 @@ export function SignupPage() {
           confirmPassword: "",
           role: ""
         });
+        recaptchaRef.current?.reset();
+        setRecaptchaToken(null);
         setTimeout(() => {
           navigate("/login");
         }, 2000);
       } else {
         setError(result.error || "Failed to create account. Please try again.");
-        loadCaptcha();
+        recaptchaRef.current?.reset();
+        setRecaptchaToken(null);
       }
     } catch (err) {
       console.error('Signup error:', err);
       setError("Network error. Please check your connection and try again.");
-      loadCaptcha();
+      recaptchaRef.current?.reset();
+      setRecaptchaToken(null);
     } finally {
       setIsLoading(false);
     }
@@ -215,8 +203,8 @@ export function SignupPage() {
               {/* Role Selection */}
               <div className="space-y-2 relative">
                 <Label htmlFor="role">Role *</Label>
-                <Select 
-                  value={formData.role} 
+                <Select
+                  value={formData.role}
                   onValueChange={(value) => handleInputChange("role", value)}
                   disabled={isLoading}
                 >
@@ -297,39 +285,14 @@ export function SignupPage() {
                 </div>
               </div>
 
-              {/* CAPTCHA Field */}
-              <div className="space-y-2">
-                {captcha ? (
-                  <>
-                    <Label htmlFor="captcha">{captcha.question} *</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="captcha"
-                        type="number"
-                        placeholder="Enter answer"
-                        value={captchaAnswer}
-                        onChange={(e) => setCaptchaAnswer(e.target.value)}
-                        disabled={isLoading}
-                        required
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={loadCaptcha}
-                        disabled={isLoading}
-                        title="Refresh CAPTCHA"
-                      >
-                        <RefreshCw className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex items-center gap-2 text-amber-600">
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                    <span className="text-sm">Loading CAPTCHA...</span>
-                  </div>
-                )}
+              {/* Google reCAPTCHA */}
+              <div className="flex justify-center">
+                <ReCAPTCHA
+                  ref={recaptchaRef}
+                  sitekey={APP_CONFIG.recaptchaSiteKey}
+                  onChange={(token) => setRecaptchaToken(token)}
+                  onExpired={() => setRecaptchaToken(null)}
+                />
               </div>
 
               {/* Error Alert */}

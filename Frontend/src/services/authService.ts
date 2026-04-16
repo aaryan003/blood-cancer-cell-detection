@@ -1,34 +1,7 @@
 import { APP_CONFIG, API_ENDPOINTS } from '../constants';
-import type { SignupData, LoginData, AuthResponse, Captcha } from '../types';
+import type { SignupData, LoginData, AuthResponse } from '../types';
 
 class AuthService {
-  async fetchCaptcha(): Promise<Captcha | null> {
-    try {
-      const response = await fetch(`${APP_CONFIG.apiUrl}${API_ENDPOINTS.CAPTCHA}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (!response.ok) {
-        console.error('CAPTCHA fetch failed:', response.status, response.statusText);
-        return null;
-      }
-      
-      const result = await response.json();
-      
-      if (result.success && result.captcha) {
-        return result.captcha;
-      }
-      
-      console.error('Invalid CAPTCHA response:', result);
-      return null;
-    } catch (error) {
-      console.error('Failed to fetch CAPTCHA:', error);
-      return null;
-    }
-  }
   async signup(data: SignupData): Promise<AuthResponse> {
     try {
       const response = await fetch(`${APP_CONFIG.apiUrl}${API_ENDPOINTS.AUTH.SIGNUP}`, {

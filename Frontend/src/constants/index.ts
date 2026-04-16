@@ -2,6 +2,7 @@ export const APP_CONFIG = {
   name: 'Blood Cancer Cell Detection System',
   version: '1.0.0',
   apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:3001',
+  recaptchaSiteKey: import.meta.env.VITE_RECAPTCHA_SITE_KEY || '',
 };
 
 export const ROLES = {
@@ -25,7 +26,6 @@ export const API_ENDPOINTS = {
     LOGOUT: '/api/auth/logout',
     PROFILE: '/api/auth/profile',
   },
-  CAPTCHA: '/api/captcha',
   UPLOAD: '/api/upload',
   PREDICT: '/api/predict',
   DIAGNOSES: '/api/diagnoses',
