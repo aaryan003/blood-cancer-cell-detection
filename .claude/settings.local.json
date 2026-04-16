@@ -4,7 +4,8 @@
       "Bash(find 'F:/GUNI/SEM 8/Backend/' -name *.py -o -name *.h5 -o -name *.pkl -o -name *.pth -o -name *.keras)",
       "Bash(npx prisma:*)",
       "Bash(xargs -I {} basename {})",
-      "Bash(find 'F:/GUNI/SEM 8' -maxdepth 3 -type f -name *.py -o -name *.js -o -name *.json -o -name *.html -o -name *.css -o -name *.yml -o -name *.yaml -o -name *.txt -o -name *.cfg -o -name *.toml -o -name Dockerfile -o -name Procfile)"
+      "Bash(find 'F:/GUNI/SEM 8' -maxdepth 3 -type f -name *.py -o -name *.js -o -name *.json -o -name *.html -o -name *.css -o -name *.yml -o -name *.yaml -o -name *.txt -o -name *.cfg -o -name *.toml -o -name Dockerfile -o -name Procfile)",
+      "Bash(timeout 5 node src/server.js)"
     ]
   }
 }
